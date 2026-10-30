@@ -1,0 +1,45 @@
+name: Собрать APK
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Установить Capacitor
+        run: npm install
+
+      - name: Создать Android-проект
+        run: |
+          npx cap add android
+          npx cap sync android
+
+      - name: Значок приложения
+        run: |
+          rm -rf android/app/src/main/res/mipmap-anydpi-v26
+          cp -r icons/res/* android/app/src/main/res/
+
+      - name: Собрать APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Выложить APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: dnevnik-zala-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
