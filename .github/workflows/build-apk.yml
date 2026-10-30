@@ -1,4 +1,8 @@
-name: Собрать APK
+      - name: Постоянная подпись
+        run: |
+          mkdir -p ~/.android
+          cp debug.keystore ~/.android/debug.keystore
+          name: Собрать APK
 
 on:
   push:
