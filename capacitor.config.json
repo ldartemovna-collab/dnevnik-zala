@@ -1,0 +1,6 @@
+{
+  "appId": "ru.dnevnikzala.app",
+  "appName": "Дневник зала",
+  "webDir": "www",
+  "android": { "backgroundColor": "#eceff3" }
+}
