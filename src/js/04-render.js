@@ -133,7 +133,7 @@ function planBanner(){
 }
 function onboardingHtml(){
   return '<div class="onb"><h2>С чего начнём?</h2><p>Выбери готовую программу — её можно будет поменять в любой момент. Или оставь стандартный набор: фулбади, верх и низ.</p>'+
-    '<div class="tlist">'+TEMPLATES.slice(0,6).map(templateCard).join("")+'</div>'+
+    '<div class="tlist">'+TEMPLATES.filter(function(t){return ["t_full_new","t_full_ab","t_ul","t_glute3","t_home0","t_home_db"].indexOf(t.id)>=0;}).map(templateCard).join("")+'</div>'+
     '<div class="btns"><button class="btn primary" data-act="lib">Все программы ('+TEMPLATES.length+')</button><button class="btn" data-act="onbskip">Оставить как есть</button></div></div>';
 }
 function templateCard(t){

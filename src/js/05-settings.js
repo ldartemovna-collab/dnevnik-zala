@@ -99,9 +99,10 @@ function renderModal(){
   }else if(m.type==="library"){
     var lt=state.libTab;
     inner='<div class="mhead"><h2>Готовые программы</h2><button class="x" data-act="mclose" aria-label="Закрыть">×</button></div>'+
-      '<div class="seg"><button class="'+(lt==="programs"?'on':'')+'" data-act="libtab" data-lt="programs">Программы ('+TEMPLATES.length+')</button><button class="'+(lt==="plans"?'on':'')+'" data-act="libtab" data-lt="plans">Планы на месяц ('+PLANS.length+')</button></div>';
-    if(lt==="programs"){
-      inner+='<p class="msub">«Добавить» — программа появится рядом с твоими тренировками. «Заменить мои» — уберёт текущие (история сохранится).</p><div class="tlist">'+TEMPLATES.map(templateCard).join("")+'</div>';
+      '<div class="seg"><button class="'+(lt==="programs"?'on':'')+'" data-act="libtab" data-lt="programs">В зале ('+TEMPLATES.filter(function(t){return t.place!=="home";}).length+')</button><button class="'+(lt==="home"?'on':'')+'" data-act="libtab" data-lt="home">Дома ('+TEMPLATES.filter(function(t){return t.place==="home";}).length+')</button><button class="'+(lt==="plans"?'on':'')+'" data-act="libtab" data-lt="plans">Планы ('+PLANS.length+')</button></div>';
+    if(lt==="programs"||lt==="home"){
+      var lst=TEMPLATES.filter(function(t){return lt==="home"?t.place==="home":t.place!=="home";});
+      inner+='<p class="msub">'+(lt==="home"?'Тренировки без зала: с собственным весом, гантелями или резинкой. ':'')+'«Добавить» — программа появится рядом с твоими тренировками. «Заменить мои» — уберёт текущие (история сохранится).</p><div class="tlist">'+lst.map(templateCard).join("")+'</div>';
     }else{
       var cur=state.config.plan&&state.config.plan.id;
       inner+='<p class="msub">План работает поверх любой программы: меняет повторы, подходы и вес по неделям. Начнётся с этой недели.</p><div class="tlist">'+PLANS.map(function(p){
