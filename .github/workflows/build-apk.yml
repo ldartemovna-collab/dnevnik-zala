@@ -27,6 +27,11 @@ jobs:
           npx cap add android
           npx cap sync android
 
+      - name: Разрешение на вибрацию
+        run: |
+          sed -i 's#<uses-permission android:name="android.permission.INTERNET" />#<uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.VIBRATE" />#' android/app/src/main/AndroidManifest.xml
+          grep -n "permission" android/app/src/main/AndroidManifest.xml
+
       - name: Значок приложения
         run: |
           rm -rf android/app/src/main/res/mipmap-anydpi-v26

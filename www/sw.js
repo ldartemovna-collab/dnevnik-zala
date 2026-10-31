@@ -1,6 +1,6 @@
 // Офлайн-режим: приложение открывается без интернета.
 // После изменения файлов увеличь номер версии, чтобы телефоны получили обновление.
-const CACHE = "dnevnik-zala-v2";
+const CACHE = "dnevnik-zala-v3";
 const FILES = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
 
 self.addEventListener("install", e => {

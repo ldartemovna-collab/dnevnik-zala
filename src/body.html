@@ -1,0 +1,28 @@
+
+
+<header class="top"><div class="wrap">
+  <div class="brand"><h1>Дневник зала</h1><span class="status" id="status">Загрузка…</span></div>
+  <div class="daterow" id="daterow">
+    <button class="nav" id="prevDay" aria-label="Предыдущий день">‹</button>
+    <label class="datebox"><span id="dateLabel">—</span><span class="today" id="todayTag" hidden>сегодня</span><input type="date" id="dateInput" aria-label="Дата тренировки"></label>
+    <button class="nav" id="nextDay" aria-label="Следующий день">›</button>
+  </div>
+</div></header>
+
+<main><div class="wrap" id="view"></div></main>
+
+<div class="restbar" id="restbar" hidden><div class="wrap rbin">
+  <div class="rbring"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" class="rbg"/><circle cx="24" cy="24" r="20" class="rfg" id="rbArc"/></svg><b id="rbTime">0:00</b></div>
+  <div class="rbinfo"><b id="rbTitle">Отдых</b><span id="rbWhat"></span></div>
+  <button class="rbb" id="rbMinus" aria-label="Минус 15 секунд">−15</button><button class="rbb" id="rbPlus" aria-label="Плюс 15 секунд">+15</button><button class="rbb x" id="rbStop" aria-label="Закрыть таймер">×</button>
+</div></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<div class="modal" id="modal" hidden></div>
+
+<nav class="tabs"><div class="wrap">
+  <button class="tab on" data-tab="workout"><svg viewBox="0 0 24 24"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/></svg>Тренировка</button>
+  <button class="tab" data-tab="history"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>История</button>
+  <button class="tab" data-tab="progress"><svg viewBox="0 0 24 24"><path d="M4 19h16M6 15l4-4 3 3 5-6"/></svg>Прогресс</button>
+  <button class="tab" data-tab="exercises"><svg viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>Настройки</button>
+</div></nav>
+
