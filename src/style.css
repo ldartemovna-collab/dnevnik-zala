@@ -438,3 +438,13 @@ button.kchip{cursor:pointer;min-width:52px}
 .cmpline span:last-child{display:flex;flex-direction:column;font-size:14px}
 .cmpline small{font-size:12px;color:var(--muted)}
 .quote{margin:0;font-size:14px;font-style:italic;color:var(--muted);text-align:center;padding:0 8px}
+.set.nw{grid-template-columns:20px minmax(0,1fr) 28px}
+.set.nw .fld input{padding:0 44px 0 8px;text-align:left}
+.set.nw .fld small{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--muted);pointer-events:none}
+.mchip{cursor:pointer;text-transform:none;letter-spacing:0}
+.mchip.m-w{background:var(--surface-2);color:var(--ink)}
+.mchip.m-bw{background:color-mix(in srgb,var(--accent) 12%,var(--surface));color:var(--accent)}
+.mchip.m-time{background:color-mix(in srgb,#8e4ec6 14%,var(--surface));color:#8e4ec6}
+.mchip.open{box-shadow:0 0 0 2px var(--accent)}
+.mpick{margin-top:2px}
+.mpick button{font-size:12px;padding:7px 2px}

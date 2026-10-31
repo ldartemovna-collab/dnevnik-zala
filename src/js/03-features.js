@@ -49,7 +49,7 @@ function suggestedRest(exId,set){
   var learned=state.config.restLearn[exId];
   var base=learned||KINDS[exKind(exId)].rest;
   var why="";
-  if(set&&set.r>0){
+  if(set&&set.r>0&&exMode(exId)!=="time"){
     if(set.r<R.lo){base+=30;why="тяжёлый подход +30 с";}
     else if(set.r>R.hi){base-=15;why="легко −15 с";}
   }
@@ -209,9 +209,9 @@ function comparison(months){
     var base=null;for(var i=h.length-1;i>=0;i--){if(h[i].date<=cut){base=h[i];break;}}
     var since=false;if(!base){base=h[0];since=true;}
     var now=h[h.length-1];if(now.date===base.date)return;
-    var bw=h.every(function(p){return p.top<=0;});
+    var md=exMode(e.id);var bw=md!=="w"||h.every(function(p){return p.top<=0;});
     var a=bw?base.reps:base.top,b=bw?now.reps:now.top;
-    rows.push({exId:e.id,from:a,to:b,unit:bw?"раз":"кг",diff:b-a,pct:a>0?Math.round((b-a)/a*100):0,since:since,fromDate:base.date});
+    rows.push({exId:e.id,from:a,to:b,unit:md==="time"?"сек":bw?"раз":"кг",diff:b-a,pct:a>0?Math.round((b-a)/a*100):0,since:since,fromDate:base.date});
   });});
   rows.sort(function(x,y){return y.pct-x.pct||y.diff-x.diff;});
   return rows;

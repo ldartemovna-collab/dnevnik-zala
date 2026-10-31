@@ -35,10 +35,10 @@ function renderSettings(){
       ?'<p><b style="color:var(--ink)">'+esc(pw.name)+'</b> · начат '+fmtDate(state.config.plan.start)+'</p><div class="pweeks">'+pw.weeks.map(function(w,i){return '<span><b>Нед. '+(i+1)+'</b>'+w.sets+'×'+(w.lo===w.hi?w.lo:w.lo+'–'+w.hi)+(w.load<1?'<small>'+Math.round(w.load*100)+'% веса</small>':'')+'</span>';}).join("")+'</div><div class="btns"><button class="btn" data-act="lib" data-lt="plans">Сменить план</button><button class="btn danger" data-act="planoff">Убрать план</button></div>'
       :'<p>План меняет повторы и подходы по неделям: 3 недели нагрузка растёт, 4-я — разгрузка. Подходит к любой программе.</p><button class="btn" data-act="lib" data-lt="plans">Выбрать план</button>')+'</div>';
 
-  h+='<div class="sec-title">Группы мышц и упражнения</div><p class="hint left">Тип упражнения (Тяж. / Сред. / Изол. / Лёгк.) решает, сколько отдыхать. Нажми на него, чтобы поменять.</p>';
+  h+='<div class="sec-title">Группы мышц и упражнения</div><p class="hint left">У каждого упражнения два переключателя, нажми чтобы поменять: <b>кг / без веса / сек</b> — как записывать подходы; <b>Тяж. / Сред. / Изол. / Лёгк.</b> — сколько отдыхать.</p>';
   liveGroups().forEach(function(g,gi){
     var rows=g.ex.filter(function(e){return !e.archived;}).map(function(e){
-      return '<div class="exrow"><span>'+esc(e.name)+(e.backRisk?' <span class="risk" title="Нагрузка на поясницу">⚠️</span>':'')+'</span>'+kindChip(e.id,"button")+confirmBtns("e",e.id)+'</div>';
+      return '<div class="exrow"><span>'+esc(e.name)+(e.backRisk?' <span class="risk" title="Нагрузка на поясницу">⚠️</span>':'')+'</span>'+modeChip(e.id)+kindChip(e.id,"button")+confirmBtns("e",e.id)+'</div>'+modePicker(e.id);
     }).join("");
     var mopts='<option value="">не показывать</option>'+Object.keys(MUSCLES).map(function(k){return '<option value="'+k+'"'+(g.muscle===k?' selected':'')+'>'+MUSCLES[k]+'</option>';}).join("");
     h+='<details class="card gcard"'+(state.openGroup===g.id?' open':'')+' data-gd="'+g.id+'"><summary>'+plate(gi)+'<span class="gsum">'+esc(g.name)+'</span><em>'+g.ex.filter(function(e){return !e.archived;}).length+'</em></summary>'+
@@ -88,7 +88,7 @@ function renderModal(){
       '<div class="sumgrid"><div><small>Время</small><b>'+(dur?fmtDur(dur):'—')+'</b></div><div><small>Поднято</small><b>'+fmtBig(tonnage(w))+' кг</b></div><div><small>Упражнений</small><b>'+doneEntries(w).length+'</b></div><div><small>Подходов</small><b>'+setsCount(w)+'</b></div></div>'+
       (function(){var cm=pickThing(tonnage(w),Math.floor(Math.random()*1e9));return cm?'<div class="cmpline"><span class="cmpic">'+cm.t.ic+'</span><span>Это как поднять <b>'+esc(cm.text)+'</b><small>по ≈ '+fmtBig(cm.each)+' кг</small></span></div>':'';})()+
       '<p class="quote">«'+esc(pickQuote(Math.floor(Math.random()*1e9)))+'»</p>'+
-      (recs.length?'<div class="recs"><b>🏆 '+recs.length+' '+plural(recs.length,'рекорд','рекорда','рекордов')+'</b>'+recs.map(function(r){return '<div><span>'+esc(exName(r.exId))+'</span><span>'+(r.w?fmtNum(r.w)+' кг × ':'')+r.r+'</span></div>';}).join("")+'</div>':'')+
+      (recs.length?'<div class="recs"><b>🏆 '+recs.length+' '+plural(recs.length,'рекорд','рекорда','рекордов')+'</b>'+recs.map(function(r){return '<div><span>'+esc(exName(r.exId))+'</span><span>'+fmtSet(r.exId,r.w,r.r)+'</span></div>';}).join("")+'</div>':'')+
       (m.fresh&&m.ach&&m.ach.length?'<div class="recs ach"><b>Новые достижения</b>'+m.ach.map(function(id){var a=ACH.filter(function(x){return x.id===id;})[0];return '<div><span>'+a.ic+' '+esc(a.name)+'</span></div>';}).join("")+'</div>':'')+
       '<div class="btns"><button class="btn primary" data-act="card" data-d="'+w.date+'">Сделать карточку</button><button class="btn" data-act="mclose">Закрыть</button></div>';
   }else if(m.type==="card"){

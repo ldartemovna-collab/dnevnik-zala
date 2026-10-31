@@ -43,14 +43,23 @@ function renderDate(){
 function plate(i){return '<span class="plate" style="--pc:var('+PLATES[i%PLATES.length]+')"></span>';}
 function kindChip(exId,tag){var k=exKind(exId);return '<'+(tag||"span")+' class="kchip k-'+k+'"'+(tag==="button"?' data-act="kind" data-e="'+exId+'" title="Тип упражнения влияет на отдых"':'')+'>'+KINDS[k].short+'</'+(tag||"span")+'>';}
 
+function modeChip(exId){var m=exMode(exId);return '<button class="kchip mchip m-'+m+(state.modePick===exId?' open':'')+'" data-act="mode" data-e="'+exId+'" title="С весом, без веса или на время">'+MODES[m].short+' ▾</button>';}
+function modePicker(exId){
+  if(state.modePick!==exId)return "";var m=exMode(exId);
+  return '<div class="seg mpick">'+MODE_ORDER.map(function(k){return '<button class="'+(k===m?'on':'')+'" data-act="modeset" data-e="'+exId+'" data-m="'+k+'">'+MODES[k].name+'</button>';}).join("")+'</div>';
+}
 function recHtml(exId){
-  var r=recommend(exId,state.date),R=r.R;
-  if(r.type==="new")return '<div class="rec new"><div class="goal">Первый раз — подбери вес на '+R.lo+'–'+R.hi+' повторов</div></div>';
+  var r=recommend(exId,state.date),R=r.R,mode=exMode(exId);
+  if(r.type==="new"){
+    var t=mode==="time"?"Первый раз — держи сколько сможешь и запиши секунды":mode==="bw"?"Первый раз — сделай сколько сможешь, оставив 1–2 повтора в запасе":"Первый раз — подбери вес на "+R.lo+"–"+R.hi+" повторов";
+    return '<div class="rec new"><div class="goal">'+t+'</div></div>';
+  }
+  if(r.time)return '<div class="rec up"><div class="last">Прошлый раз, '+fmtDate(r.last.date)+': <span>'+esc(setsText(r.last.entry))+'</span></div><div class="goal">Сегодня: попробуй <span>'+r.target+' сек</span></div></div>';
   var last='<div class="last">Прошлый раз, '+fmtDate(r.last.date)+': <span>'+esc(setsText(r.last.entry))+'</span></div>';
   var rng=R.lo===R.hi?R.lo:R.lo+'–'+R.hi;
   var goal;
   if(r.type==="deload")goal='Разгрузка: <span>'+fmtNum(r.w)+' кг</span> × '+rng+', спокойно';
-  else if(r.bw)goal=r.type==="up"?"Сегодня: добавь 2–3 повтора или вес":"Сегодня: постарайся сделать на повтор больше";
+  else if(r.bw)goal=r.type==="up"?(mode==="bw"?"Сегодня: добавь 1–2 повтора":"Сегодня: добавь 2–3 повтора или вес"):"Сегодня: постарайся сделать на повтор больше";
   else if(r.type==="up")goal='Сегодня: <span>'+fmtNum(r.w)+' кг</span> × '+rng+' ↑ прибавка';
   else goal='Сегодня: <span>'+fmtNum(r.w)+' кг</span>, добей до '+R.hi+' во всех подходах';
   return '<div class="rec '+r.type+'">'+last+'<div class="goal">'+goal+'</div></div>';
@@ -61,9 +70,13 @@ function loggerHtml(gid,en,showName,groupExIds){
   var R=curReps();
   var foreign=groupExIds.indexOf(en.exId)<0;
   var f=findEx(en.exId);
+  var mode=exMode(en.exId);
   var rows=en.sets.map(function(s,i){
     var a='data-g="'+gid+'" data-e="'+en.exId+'" data-i="'+i+'"';
     var logged=s.r>0;
+    if(mode!=="w")return '<div class="set nw'+(logged?' logged':'')+'"><span class="n">'+(i+1)+'</span>'+
+      '<div class="fld"><input id="r-'+en.exId+'-'+i+'" inputmode="numeric" enterkeyhint="done" autocomplete="off" '+a+' data-f="r" value="'+(s.r||"")+'" placeholder="'+(mode==="time"?"секунды":(R.lo===R.hi?R.lo:R.lo+'–'+R.hi))+'" aria-label="'+(mode==="time"?"Секунды":"Повторы")+'"><small>'+(mode==="time"?"сек":"раз")+'</small></div>'+
+      '<button class="del" data-act="delset" '+a+' aria-label="Убрать подход">×</button></div>';
     return '<div class="set'+(logged?' logged':'')+'"><span class="n">'+(i+1)+'</span>'+
       '<div class="wfld"><button class="pm" data-act="wminus" '+a+' aria-label="Меньше вес">−</button>'+
       '<div class="fld"><input id="w-'+en.exId+'-'+i+'" inputmode="decimal" autocomplete="off" '+a+' data-f="w" value="'+fmtNum(s.w)+'" placeholder="0" aria-label="Вес, кг"></div>'+
@@ -85,10 +98,11 @@ function loggerHtml(gid,en,showName,groupExIds){
     var alts=swapOptions(en);
     swapHtml='<div class="swap"><div class="swaptitle">Тренажёр занят? Замени на:</div><div class="chips">'+(alts.length?alts.map(function(id){return '<button class="chip" data-act="swapto" data-g="'+gid+'" data-e="'+en.exId+'" data-to="'+id+'">'+esc(exName(id))+'</button>';}).join(""):'<span class="hint">Нет похожих упражнений — добавь в «Настройках»</span>')+'</div><button class="linkbtn" data-act="swapcancel">отмена</button></div>';
   }
-  var head='<div class="lhead">'+((showName||foreign)?'<h3>'+esc(exName(en.exId))+'</h3>':'<span class="sp"></span>')+kindChip(en.exId)+
+  var head='<div class="lhead">'+((showName||foreign)?'<h3>'+esc(exName(en.exId))+'</h3>':'<span class="sp"></span>')+modeChip(en.exId)+kindChip(en.exId)+
     (f&&f.e.backRisk?'<span class="risk" title="Нагрузка на поясницу">⚠️</span>':'')+
     '<span class="ltools"><button class="tool" data-act="swap" data-g="'+gid+'" data-e="'+en.exId+'" title="Тренажёр занят">⇄ Занято</button>'+
     (partner?'':'<button class="tool'+(state.ssPick===entryKey(en)?' on':'')+'" data-act="sspick" data-g="'+gid+'" data-e="'+en.exId+'" title="Суперсет">🔗</button>')+'</span></div>';
+  head+=modePicker(en.exId);
   return '<div class="log'+(partner?' inss':'')+'" data-entry="'+esc(entryKey(en))+'">'+head+swapHtml+ssHtml+noteHtml+recHtml(en.exId)+
     '<div class="sets">'+rows+'</div><button class="addset" data-act="addset" data-g="'+gid+'" data-e="'+en.exId+'">+ подход</button></div>';
 }
@@ -274,11 +288,12 @@ function renderProgress(){
     return o?'<optgroup label="'+esc(g.name)+'">'+o+'</optgroup>':'';
   }).join("");
   var hist=exHistory(state.progEx);
-  var useReps=hist.every(function(p){return p.top<=0;});
+  var exm=exMode(state.progEx);
+  var useReps=exm!=="w"||hist.every(function(p){return p.top<=0;});
   var best=hist.reduce(function(b,p){var v=useReps?p.reps:p.top,bv=useReps?b.reps:b.top;return v>bv||(v===bv&&p.reps>b.reps)?p:b;},hist[0]);
   var first=hist[0],last=hist[hist.length-1];
   var diff=useReps?last.reps-first.reps:Math.round((last.top-first.top)*100)/100;
-  var unit=useReps?" раз":" кг";
+  var unit=exm==="time"?" сек":useReps?" раз":" кг";
   var g=state.config.goals[state.progEx];
   h+='<div class="sec-title">Упражнение</div><select class="sel" id="progSel" aria-label="Упражнение">'+opts+'</select>'+
     '<div class="stats"><div class="stat"><small>Тренировок</small><b>'+hist.length+'</b></div>'+

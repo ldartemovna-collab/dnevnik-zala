@@ -8,25 +8,27 @@ var KINDS = {
   core:{name:"Пресс / икры",short:"Лёгк.",rest:45}
 };
 var KIND_ORDER = ["heavy","mid","iso","core"];
+var MODES = {w:{name:"С весом",short:"кг"},bw:{name:"Без веса",short:"без веса"},time:{name:"На время",short:"сек"}};
+var MODE_ORDER = ["w","bw","time"];
 var MUSCLES = {quads:"Квадрицепс",glutes:"Ягодицы",hams:"Задняя поверхность бедра",hips:"Внешняя и внутренняя часть бедра",back:"Спина",chest:"Грудь",shoulders:"Плечи",biceps:"Бицепс",triceps:"Трицепс",calves:"Икры",abs:"Пресс"};
 var ACCENTS = [["blue","Синий"],["pink","Розовый"],["violet","Фиолетовый"],["green","Зелёный"],["orange","Оранжевый"]];
 
 /* ---------- библиотека упражнений ---------- */
 /* [id, название, тип, мышца (если отличается от группы), нагрузка на поясницу] */
-function G(id,name,muscle,ex){return {id:id,name:name,muscle:muscle,ex:ex.map(function(e){var o={id:e[0],name:e[1],kind:e[2]||"mid"};if(e[3])o.muscle=e[3];if(e[4])o.backRisk=true;return o;})};}
+function G(id,name,muscle,ex){return {id:id,name:name,muscle:muscle,ex:ex.map(function(e){var o={id:e[0],name:e[1],kind:e[2]||"mid"};if(e[3])o.muscle=e[3];if(e[4])o.backRisk=true;if(e[5])o.mode=e[5];return o;})};}
 var DEFAULT_GROUPS = [
   G("q","Квадрицепс","quads",[["q1","Жим ногами","heavy"],["q2","Разгибание ног","iso"],["q3","Зашагивания","mid"],["q4","Болгарские сплит-приседания","mid"],["q5","Выпады назад с гантелями","mid"],["q6","Гоблет-присед","mid",null,1],["q7","Гакк-приседания","heavy",null,1],["q8","Приседания со штангой","heavy",null,1]]),
-  G("g","Ягодицы","glutes",[["g1","Ягодичный мост","mid"],["g2","Гиперэкстензия","mid"],["g3","Отведение ноги назад","iso"],["g4","Хип-траст со штангой","heavy"],["g5","Мост на одной ноге","iso"]]),
+  G("g","Ягодицы","glutes",[["g1","Ягодичный мост","mid"],["g2","Гиперэкстензия","mid",null,0,"bw"],["g3","Отведение ноги назад","iso"],["g4","Хип-траст со штангой","heavy"],["g5","Мост на одной ноге","iso",null,0,"bw"]]),
   G("h","Задняя поверхность бедра","hams",[["h1","Сгибание ног","iso"],["h2","Румынская тяга","heavy",null,1],["h3","Становая тяга","heavy",null,1]]),
   G("l","Ноги, дополнительно","hips",[["l1","Отведение бёдер","iso"],["l2","Сведение бёдер","iso"]]),
   G("b","Спина","back",[["b1","Тяга верхнего блока","mid"],["b2","Рычажная тяга","mid"],["b3","Тяга гантели одной рукой","mid"],["b4","Тяга штанги в наклоне","heavy",null,1],["b5","Тяга горизонтального блока","mid"],["b6","Подтягивания в гравитроне","mid"],["b7","Пуловер на верхнем блоке","iso"]]),
-  G("c","Грудь","chest",[["c1","Жим гантелей","mid"],["c2","Бабочка","iso"],["c3","Разводка гантелей","iso"],["c4","Отжимания","mid"],["c5","Жим гантелей на наклонной","mid"],["c6","Жим штанги лёжа","heavy"],["c7","Жим в тренажёре сидя","mid"]]),
+  G("c","Грудь","chest",[["c1","Жим гантелей","mid"],["c2","Бабочка","iso"],["c3","Разводка гантелей","iso"],["c4","Отжимания","mid",null,0,"bw"],["c5","Жим гантелей на наклонной","mid"],["c6","Жим штанги лёжа","heavy"],["c7","Жим в тренажёре сидя","mid"]]),
   G("s","Плечи","shoulders",[["s1","Армейский жим","heavy",null,1],["s2","Жим гантелей сидя","mid"],["s3","Махи в стороны","iso"],["s4","Отведение на блоке","iso"],["s5","Обратная бабочка","iso"],["s6","Тяга каната к лицу","iso"]]),
-  G("m","Мини-блок","triceps",[["m1","Трицепс","iso","triceps"],["m2","Икры","core","calves"],["m3","Пресс","core","abs"]]),
+  G("m","Мини-блок","triceps",[["m1","Трицепс","iso","triceps"],["m2","Икры","core","calves"],["m3","Пресс","core","abs",0,"bw"]]),
   G("bi","Бицепс","biceps",[["bi1","Сгибания с гантелями сидя","iso"],["bi2","Молотки","iso"],["bi3","Сгибания на скамье Скотта","iso"],["bi4","Сгибания на нижнем блоке","iso"]]),
-  G("tr","Трицепс","triceps",[["tr1","Разгибания на верхнем блоке","iso"],["tr2","Французский жим с гантелями","iso"],["tr3","Разгибание гантели из-за головы","iso"],["tr4","Отжимания узким хватом","mid"]]),
+  G("tr","Трицепс","triceps",[["tr1","Разгибания на верхнем блоке","iso"],["tr2","Французский жим с гантелями","iso"],["tr3","Разгибание гантели из-за головы","iso"],["tr4","Отжимания узким хватом","mid",null,0,"bw"]]),
   G("ca","Икры","calves",[["ca1","Подъёмы на носки сидя","core"],["ca2","Подъёмы на носки в тренажёре","core"],["ca3","Подъёмы на носки на одной ноге","core"]]),
-  G("ab","Пресс","abs",[["ab1","Планка","core"],["ab2","Боковая планка","core"],["ab3","Мёртвый жук","core"],["ab4","Паллоф-пресс","core"],["ab5","Скручивания","core"],["ab6","Подъём коленей в упоре","core"]])
+  G("ab","Пресс","abs",[["ab1","Планка","core",null,0,"time"],["ab2","Боковая планка","core",null,0,"time"],["ab3","Мёртвый жук","core",null,0,"bw"],["ab4","Паллоф-пресс","core"],["ab5","Скручивания","core",null,0,"bw"],["ab6","Подъём коленей в упоре","core",null,0,"bw"]])
 ];
 function P(id,name,slots,reps){var p={id:id,name:name,slots:slots.map(function(s){var o={gid:s[0],count:s[1]||1};if(s[2])o.pref=s[2];return o;})};if(reps)p.reps=reps;return p;}
 var DEFAULT_PROGRAMS = [
@@ -64,6 +66,7 @@ function fillDefaults(cfg){
       if(!e.kind)e.kind=d?d.kind:"mid";
       if(e.muscle===undefined&&d&&d.muscle)e.muscle=d.muscle;
       if(e.backRisk===undefined&&d&&d.backRisk)e.backRisk=true;
+      if(e.mode===undefined&&d&&d.mode)e.mode=d.mode;
     });
   });
   var s=cfg.settings=cfg.settings||{};
@@ -167,6 +170,15 @@ function program(id){return state.config.programs.filter(function(p){return p.id
 function findEx(id){var gs=groups();for(var i=0;i<gs.length;i++){for(var j=0;j<gs[i].ex.length;j++){if(gs[i].ex[j].id===id)return {g:gs[i],e:gs[i].ex[j]};}}return null;}
 function exName(id){var f=findEx(id);return f?f.e.name:"Упражнение удалено";}
 function exKind(id){var f=findEx(id);return f&&KINDS[f.e.kind]?f.e.kind:"mid";}
+function exMode(id){var f=findEx(id);return f&&MODES[f.e.mode]?f.e.mode:"w";}
+function fmtSet(exId,w,r){if(exMode(exId)==="time")return r+" сек";return (w?fmtNum(w)+" кг × ":"")+r;}
+/* Упражнения без веса, по которым раньше записывали вес, оставляем «с весом» */
+function fixModesByHistory(){
+  if(state.config.modesChecked)return;
+  var weighted={};sortedDates().forEach(function(d){state.workouts[d].entries.forEach(function(en){if(workSets(en).some(function(s){return s.w>0;}))weighted[en.exId]=1;});});
+  groups().forEach(function(g){g.ex.forEach(function(e){if(e.mode&&e.mode!=="w"&&weighted[e.id])e.mode="w";});});
+  state.config.modesChecked=true;state.cfgDirty=true;
+}
 function exMuscle(id){var f=findEx(id);if(!f)return null;return f.e.muscle||f.g.muscle||null;}
 function workSets(entry){return (entry.sets||[]).filter(function(s){return !s.wu&&s.r>0;});}
 function sortedDates(){return Object.keys(state.workouts).sort();}
@@ -213,7 +225,9 @@ function recommend(exId,date){
   var R=curReps();
   if(!last)return {type:"new",R:R};
   var ws=workSets(last.entry);
-  var top=Math.max.apply(null,ws.map(function(s){return s.w||0;}));
+  var mode=exMode(exId);
+  if(mode==="time"){var best=Math.max.apply(null,ws.map(function(s){return s.r;}));return {type:"up",time:true,target:best+5,last:last,R:R};}
+  var top=mode==="bw"?0:Math.max.apply(null,ws.map(function(s){return s.w||0;}));
   var allTop=ws.every(function(s){return s.r>=R.hi;});
   var res;
   if(top<=0)res={type:allTop?"up":"hold",w:0,bw:true,last:last};
@@ -225,13 +239,16 @@ function recommend(exId,date){
 }
 function setsText(entry){
   var ws=workSets(entry);if(!ws.length)return "";
+  var mode=exMode(entry.exId);
+  if(mode==="time")return ws.map(function(s){return s.r;}).join(", ")+" сек";
+  if(mode==="bw")return ws.map(function(s){return s.r;}).join(", ")+" раз";
   var sameW=ws.every(function(s){return s.w===ws[0].w;});
   if(sameW)return (ws[0].w?fmtNum(ws[0].w)+" кг × ":"")+ws.map(function(s){return s.r;}).join(", ");
   return ws.map(function(s){return (s.w?fmtNum(s.w)+"×":"")+s.r;}).join(", ");
 }
 function newEntry(gid,exId){
   var rec=recommend(exId,state.date);
-  var w=(rec.w!==undefined&&rec.w>0)?rec.w:null;
+  var w=(exMode(exId)==="w"&&rec.w!==undefined&&rec.w>0)?rec.w:null;
   var sets=[];for(var i=0;i<rec.R.sets;i++)sets.push({w:w,r:null});
   return {gid:gid,exId:exId,sets:sets};
 }

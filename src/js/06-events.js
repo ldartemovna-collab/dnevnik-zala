@@ -58,6 +58,13 @@ document.addEventListener("click",function(e){
     state.editNote=exId;rerender(renderWorkout);
     var ni=document.getElementById("note-"+exId);if(ni){ni.focus();ni.select();}break;
   case "noteok":{var inp2=document.querySelector("[data-note]");if(inp2)saveNote(inp2.dataset.note,inp2.value);break;}
+  case "mode":state.modePick=state.modePick===exId?null:exId;refreshCurrent();break;
+  case "modeset":{
+    var fm=findEx(exId);if(!fm)return;fm.e.mode=b.dataset.m;state.modePick=null;
+    if(fm.e.mode!=="w")state.draft.entries.forEach(function(en){if(en.exId===exId)en.sets.forEach(function(sx){if(!(sx.r>0))sx.w=null;});});
+    else state.draft.entries.forEach(function(en){if(en.exId===exId){var nr=newEntry(en.gid,exId);en.sets.forEach(function(sx,k){if(!(sx.r>0)&&nr.sets[k])sx.w=nr.sets[k].w;});}});
+    if(state.draft.entries.some(function(en){return en.exId===exId;}))touch();
+    store.saveConfig();refreshCurrent();toast(MODES[fm.e.mode].name+": «"+esc(exName(exId))+"»");break;}
   case "kind":{var f=findEx(exId);if(!f)return;var k=KIND_ORDER.indexOf(f.e.kind);f.e.kind=KIND_ORDER[(k+1)%KIND_ORDER.length];delete state.config.restLearn[exId];saveCfg(renderSettings);break;}
   case "swap":state.swap=gid+"|"+exId;rerender(renderWorkout);break;
   case "swapcancel":state.swap=null;rerender(renderWorkout);break;
@@ -169,7 +176,7 @@ function onSetLogged(en,i){
   var cand={w:s.w||0,r:s.r};var bar=w.prs[en.exId]&&better(w.prs[en.exId],prev)?w.prs[en.exId]:prev;
   if(prev&&better(cand,bar)&&(cand.w!==bar.w||cand.r!==bar.r)){
     w.prs[en.exId]=cand;confetti();buzz([60,40,60]);
-    toast('<span class="big">🏆</span><span><b>Новый рекорд!</b><br>'+esc(exName(en.exId))+' — '+(cand.w?fmtNum(cand.w)+' кг × ':'')+cand.r+'</span>',"gold");
+    toast('<span class="big">🏆</span><span><b>Новый рекорд!</b><br>'+esc(exName(en.exId))+' — '+fmtSet(en.exId,cand.w,cand.r)+'</span>',"gold");
   }
   /* отдых */
   if(w.date!==todayIso())return;
@@ -243,6 +250,7 @@ document.addEventListener("keydown",function(e){if(e.key==="Escape"&&state.modal
 
 /* ---------- запуск ---------- */
 store.loadLocal();
+fixModesByHistory();
 applyLook();
 loadDraft();
 checkAchievements(true);
@@ -259,7 +267,7 @@ function applySnapshot(snap){
   var needSave=false;
   if(c){needSave=!(c.version>=3);state.config=migrate(c);}
   if(state.dirty&&state.draft&&state.draft.entries.length)ws[state.date]=clone(state.draft);
-  state.workouts=ws;applyLook();
+  state.workouts=ws;if(c&&!state.config.modesChecked)fixModesByHistory();applyLook();
   var ae=document.activeElement;
   var typing=ae&&(view.contains(ae)||document.getElementById("modal").contains(ae))&&(ae.tagName==="INPUT"||ae.tagName==="TEXTAREA"||ae.tagName==="SELECT");
   if(!state.dirty&&!saveTimer)loadDraft();

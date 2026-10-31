@@ -141,9 +141,9 @@ function drawCard(w,opt){
     x.strokeStyle="rgba(245,197,66,0.55)";x.lineWidth=3;x.stroke();
     x.fillStyle="#f5c542";x.font="600 28px "+B;x.fillText("🏆  НОВЫЙ РЕКОРД",P+36,y+54);
     x.fillStyle="#ffffff";x.font="600 38px "+B;x.fillText(fitText(x,exName(tr.exId),W-2*P-72),P+36,y+104);
-    x.font="600 54px "+N;x.fillStyle="#f5c542";var big=(tr.w?fmtNum(tr.w)+" кг × ":"")+tr.r;x.fillText(big,P+36,y+170);
+    x.font="600 54px "+N;x.fillStyle="#f5c542";var big=fmtSet(tr.exId,tr.w,tr.r);x.fillText(big,P+36,y+170);
     var bwid=x.measureText(big).width;x.font="500 26px "+B;x.fillStyle="rgba(255,255,255,0.6)";
-    x.fillText("было "+(tr.prev.w?fmtNum(tr.prev.w)+" × ":"")+tr.prev.r,P+36+bwid+24,y+168);
+    x.fillText("было "+fmtSet(tr.exId,tr.prev.w,tr.prev.r),P+36+bwid+24,y+168);
     y+=200+46;avail=qy-30-y;
   }
   var rowH=Math.max(62,Math.min(story?92:80,Math.floor(avail/Math.max(list.length,1))));
