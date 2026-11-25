@@ -62,6 +62,7 @@ function renderSettings(){
   h+='<div class="sec-title">Оформление</div><div class="card"><div class="swatches">'+ACCENTS.map(function(a){return '<button class="sw sw-'+a[0]+(s.accent===a[0]?' on':'')+'" data-act="accent" data-a="'+a[0]+'" aria-label="'+a[1]+'" title="'+a[1]+'"></button>';}).join("")+'</div>'+
     (IS_ARTIFACT?'':'<div class="seg">'+[["auto","Как в системе"],["light","Светлая"],["dark","Тёмная"]].map(function(o){return '<button class="'+(s.theme===o[0]?'on':'')+'" data-act="theme" data-th="'+o[0]+'">'+o[1]+'</button>';}).join("")+'</div>')+'</div>';
 
+  h+='<div class="sec-title">Перенос из заметок</div><div class="card"><p>Вставь записи тренировок из Telegram или заметок — приложение само разберёт даты, упражнения, веса, повторы и подходы и сложит их в историю.</p><button class="btn primary" data-act="impopen">📥 Перенести тренировки из заметок</button></div>';
   h+='<div class="sec-title">Резервная копия</div><div class="card">'+
     '<p>'+(IS_ARTIFACT?'Скопируй данные, чтобы перенести их в отдельное приложение или на другой телефон.':'Все записи хранятся только на этом телефоне. Время от времени сохраняй копию — с ней данные можно перенести на новый телефон.')+'</p>'+
     '<div class="btns">'+((IS_ARTIFACT||window.Capacitor)?'':'<button class="btn primary" data-act="export">Сохранить файлом</button><label class="btn" for="importFile">Загрузить из файла</label><input type="file" id="importFile" accept=".json,application/json,text/plain" hidden>')+
@@ -113,6 +114,29 @@ function renderModal(){
             (has?'<span class="chas">✓ есть</span>':'<button class="btn small" data-act="catadd" data-c="'+c.id+'">Добавить</button>')+'</div>';
         }).join("")+'</div>';
       }).join("")+'</div><p class="hint" id="catEmpty" hidden>Ничего не нашлось. Можно вписать своё упражнение в «Настройках».</p>';
+  }else if(m.type==="import"){
+    inner='<div class="mhead"><h2>Перенос из заметок</h2><button class="x" data-act="mclose" aria-label="Закрыть">×</button></div>';
+    var pv=state.impPreview;
+    if(!pv){
+      inner+='<p class="msub">Скопируй сообщения с тренировками из Telegram (можно всё сразу) и вставь сюда. Каждая тренировка начинается с даты, например <b>11.03</b>, дальше — по строке на упражнение.</p>'+
+        '<textarea id="impText" class="imptext" placeholder="11.03&#10;Гравитрон подтягивания 60кг×15раз&#10;Сгиб ног 26кг ×15 4подх&#10;Махи 6кг-4кг-2кг по 12раз ×4подх">'+esc(state.impText||"")+'</textarea>'+
+        '<div class="btns"><button class="btn primary" data-act="impparse">Разобрать</button></div>'+
+        '<p class="hint left">Понимает: «кг», «р/раз», «подх», «б/в», «12р/10р/8р», дроп-сеты «6кг-4кг-2кг» и «55кг+45кг», суперсеты «…и сразу…». Год берётся текущий.</p>';
+    }else{
+      var nW=pv.length,nI=0;pv.forEach(function(w){nI+=w.items.length;});
+      var clash=pv.filter(function(w){return state.workouts[w.date]&&isWorkoutDone(state.workouts[w.date]);}).length;
+      inner+='<p class="msub">Нашла тренировок: <b>'+nW+'</b>, упражнений: <b>'+nI+'</b>. Проверь, что упражнения подобраны верно — любое можно поменять в списке.</p>'+
+        (clash?'<label class="sidetg"><input type="checkbox" id="impOver"'+(state.impOver?' checked':'')+'> Заменить тренировки на те же даты, что уже есть в приложении ('+clash+')</label>':'')+
+        '<div class="implist">'+pv.map(function(w,wi){
+          return '<div class="impw"><div class="impd">'+fmtDate(w.date,true)+' '+w.date.slice(0,4)+(state.workouts[w.date]&&isWorkoutDone(state.workouts[w.date])?' <span class="tag">уже есть</span>':'')+'</div>'+w.items.map(function(it,ii){
+            var opts=it.cands.map(function(k,ci){return '<option value="'+ci+'"'+(it.choice===ci?' selected':'')+'>'+esc(k.name)+(k.src==="cat"?' (из каталога)':'')+'</option>';}).join("")+
+              '<option value="-1"'+(it.choice===-1?' selected':'')+'>Новое: '+esc(it.name)+'</option><option value="-2"'+(it.choice===-2?' selected':'')+'>Не переносить</option>';
+            var st=it.sets.length?it.sets.map(function(s){return (s.w!=null?fmtNum(s.w)+(s.drops?"→"+s.drops.map(function(d){return fmtNum(d.w);}).join("→"):"")+"×":"")+s.r;}).join(", "):"не поняла повторы";
+            return '<div class="impi'+(it.choice===-2?' off':'')+'"><div class="imraw">'+(it.ss?'🔗 ':'')+esc(it.raw)+'</div><select class="sel small" data-imp="'+wi+':'+ii+'" aria-label="Упражнение">'+opts+'</select><div class="imsets'+(it.sets.length?'':' bad')+'">'+esc(st)+'</div></div>';
+          }).join("")+'</div>';
+        }).join("")+'</div>'+
+        '<div class="btns sticky"><button class="btn primary" data-act="impgo">Перенести '+nW+' '+plural(nW,"тренировку","тренировки","тренировок")+'</button><button class="btn" data-act="impback">Назад к тексту</button></div>';
+    }
   }else if(m.type==="library"){
     var lt=state.libTab;
     inner='<div class="mhead"><h2>Готовые программы</h2><button class="x" data-act="mclose" aria-label="Закрыть">×</button></div>'+

@@ -46,7 +46,8 @@ function kindChip(exId,tag){var k=exKind(exId);return '<'+(tag||"span")+' class=
 function modeChip(exId){var m=exMode(exId);return '<button class="kchip mchip m-'+m+(state.modePick===exId?' open':'')+'" data-act="mode" data-e="'+exId+'" title="С весом, без веса или на время">'+MODES[m].short+' ▾</button>';}
 function modePicker(exId){
   if(state.modePick!==exId)return "";var m=exMode(exId);
-  return '<div class="seg mpick">'+MODE_ORDER.map(function(k){return '<button class="'+(k===m?'on':'')+'" data-act="modeset" data-e="'+exId+'" data-m="'+k+'">'+MODES[k].name+'</button>';}).join("")+'</div>';
+  return '<div class="seg mpick">'+MODE_ORDER.map(function(k){return '<button class="'+(k===m?'on':'')+'" data-act="modeset" data-e="'+exId+'" data-m="'+k+'">'+MODES[k].name+'</button>';}).join("")+'</div>'+
+    '<label class="sidetg"><input type="checkbox" data-side="'+exId+'"'+(exSide(exId)?' checked':'')+'> На каждую сторону (по одной ноге или руке)</label>';
 }
 function recHtml(exId){
   var r=recommend(exId,state.date),R=r.R,mode=exMode(exId);
@@ -78,13 +79,22 @@ function loggerHtml(gid,en,showName,groupExIds){
     if(mode!=="w"&&mode!=="assist")return '<div class="set nw'+(logged?' logged':'')+'"><span class="n">'+(i+1)+'</span>'+
       '<div class="fld"><input id="r-'+en.exId+'-'+i+'" inputmode="numeric" enterkeyhint="done" autocomplete="off" '+a+' data-f="r" value="'+(s.r||"")+'" placeholder="'+(mode==="time"?"секунды":(R.lo===R.hi?R.lo:R.lo+'–'+R.hi))+'" aria-label="'+(mode==="time"?"Секунды":"Повторы")+'"><small>'+(mode==="time"?"сек":"раз")+'</small></div>'+
       '<button class="del" data-act="delset" '+a+' aria-label="Убрать подход">×</button></div>';
-    return '<div class="set'+(logged?' logged':'')+(mode==="assist"?' assist':'')+'"><span class="n">'+(i+1)+'</span>'+
+    var drops=(s.drops||[]).map(function(d,di){
+      var da='data-g="'+gid+'" data-e="'+en.exId+'" data-i="'+i+'" data-d="'+di+'"';
+      return '<div class="set drop'+(d.r>0?' logged':'')+'"><span class="n">↳</span>'+
+        '<div class="fld"><input id="dw-'+en.exId+'-'+i+'-'+di+'" inputmode="decimal" autocomplete="off" '+da+' data-f="dw" value="'+fmtNum(d.w)+'" placeholder="кг" aria-label="Вес после сброса"><small>кг</small></div>'+
+        '<span class="x">×</span>'+
+        '<div class="fld"><input id="dr-'+en.exId+'-'+i+'-'+di+'" inputmode="numeric" enterkeyhint="done" autocomplete="off" '+da+' data-f="dr" value="'+(d.r||"")+'" placeholder="раз" aria-label="Повторы после сброса"></div>'+
+        '<button class="del" data-act="dropdel" '+da+' aria-label="Убрать сброс">×</button><span></span></div>';
+    }).join("");
+    return '<div class="set wrow'+(logged?' logged':'')+(mode==="assist"?' assist':'')+'"><span class="n">'+(i+1)+'</span>'+
       '<div class="wfld"><button class="pm" data-act="wminus" '+a+' aria-label="Меньше вес">−</button>'+
       '<div class="fld"><input id="w-'+en.exId+'-'+i+'" inputmode="decimal" autocomplete="off" '+a+' data-f="w" value="'+fmtNum(s.w)+'" placeholder="'+(mode==="assist"?'помощь':'0')+'" aria-label="'+(mode==="assist"?'Противовес, кг':'Вес, кг')+'"></div>'+
       '<button class="pm" data-act="wplus" '+a+' aria-label="Больше вес">+</button></div>'+
       '<span class="x">×</span>'+
       '<div class="fld"><input id="r-'+en.exId+'-'+i+'" inputmode="numeric" enterkeyhint="done" autocomplete="off" '+a+' data-f="r" value="'+(s.r||"")+'" placeholder="'+(R.lo===R.hi?R.lo:R.lo+'–'+R.hi)+'" aria-label="Повторы"></div>'+
-      '<button class="del" data-act="delset" '+a+' aria-label="Убрать подход">×</button></div>';
+      '<button class="del" data-act="delset" '+a+' aria-label="Убрать подход">×</button>'+
+      (mode==="w"?'<button class="dropb" data-act="dropadd" '+a+' aria-label="Добавить сброс веса (дроп-сет)" title="Дроп-сет: сбросить вес и продолжить">↘</button>':'<span></span>')+'</div>'+drops;
   }).join("");
   var note=f&&f.e.note;
   var noteHtml=state.editNote===en.exId
@@ -99,9 +109,10 @@ function loggerHtml(gid,en,showName,groupExIds){
     var alts=swapOptions(en);
     swapHtml='<div class="swap"><div class="swaptitle">Тренажёр занят? Замени на:</div><div class="chips">'+(alts.length?alts.map(function(id){return '<button class="chip" data-act="swapto" data-g="'+gid+'" data-e="'+en.exId+'" data-to="'+id+'">'+esc(exName(id))+'</button>';}).join(""):'<span class="hint">Нет похожих упражнений</span>')+'<button class="chip more" data-act="catalog" data-g="'+gid+'" data-c="1">+ из каталога</button></div><button class="linkbtn" data-act="swapcancel">отмена</button></div>';
   }
-  var head='<div class="lhead"><h3>'+esc(exName(en.exId))+'</h3>'+modeChip(en.exId)+kindChip(en.exId)+
+  var yt='https://www.youtube.com/results?search_query='+encodeURIComponent(exName(en.exId)+" техника выполнения");
+  var head='<div class="lhead"><h3>'+esc(exName(en.exId))+'</h3>'+modeChip(en.exId)+kindChip(en.exId)+(exSide(en.exId)?'<span class="kchip sidechip">на сторону</span>':'')+
     (f&&f.e.backRisk?'<span class="risk" title="Нагрузка на поясницу">⚠️</span>':'')+
-    '<span class="ltools"><button class="tool" data-act="swap" data-g="'+gid+'" data-e="'+en.exId+'" title="Тренажёр занят">⇄ Занято</button>'+
+    '<span class="ltools"><a class="tool" href="'+yt+'"'+(window.Capacitor?'':' target="_blank" rel="noopener"')+' title="Видео с техникой">▶ Как делать</a><button class="tool" data-act="swap" data-g="'+gid+'" data-e="'+en.exId+'" title="Тренажёр занят">⇄ Занято</button>'+
     (partner?'':'<button class="tool'+(state.ssPick===entryKey(en)?' on':'')+'" data-act="sspick" data-g="'+gid+'" data-e="'+en.exId+'" title="Суперсет">🔗</button>')+
     '<button class="tool" data-act="collapse" data-g="'+gid+'" data-e="'+en.exId+'" aria-label="Свернуть подходы" title="Свернуть">▴</button></span></div>';
   head+=modePicker(en.exId);

@@ -73,7 +73,7 @@ function catId(name){var h=0;for(var i=0;i<name.length;i++){h=(h*31+name.charCod
 var CATALOG=[];
 CATALOG_GROUPS.forEach(function(cg,gi){cg.list.forEach(function(line){
   var p=line.split("|");var f=p[3]||"";
-  CATALOG.push({id:catId(p[0]),name:p[0],kind:KIND_CODE[p[1]]||"mid",mode:MODE_CODE[p[2]]||"w",muscle:cg.m,cat:gi,backRisk:f.indexOf("r")>=0,home:f.indexOf("d")>=0});
+  CATALOG.push({id:catId(p[0]),name:p[0],kind:KIND_CODE[p[1]]||"mid",mode:MODE_CODE[p[2]]||"w",muscle:cg.m,cat:gi,backRisk:f.indexOf("r")>=0,home:f.indexOf("d")>=0,side:f.indexOf("s")>=0||/одной|одну|на одной|по одной|выпад|болгарск|сплит|зашагив|пистолет|отведение ноги|приведение ноги|кикбек|концентрир/i.test(p[0])});
 });});
 function normName(s){return String(s).toLowerCase().replace(/ё/g,"е").replace(/[^a-zа-я0-9]+/g," ").trim();}
 function groupHasName(g,name){var n=normName(name);return g.ex.some(function(e){return !e.archived&&normName(e.name)===n;});}
@@ -87,6 +87,7 @@ function addFromCatalog(gid,cid){
   var o={id:id,name:c.name,kind:c.kind};
   if(c.mode!=="w")o.mode=c.mode;
   if(c.backRisk)o.backRisk=true;
+  if(c.side)o.side=true;
   if(c.muscle!==g.muscle)o.muscle=c.muscle;
   g.ex.push(o);
   return o.id;

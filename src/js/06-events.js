@@ -58,6 +58,12 @@ document.addEventListener("click",function(e){
     state.editNote=exId;rerender(renderWorkout);
     var ni=document.getElementById("note-"+exId);if(ni){ni.focus();ni.select();}break;
   case "noteok":{var inp2=document.querySelector("[data-note]");if(inp2)saveNote(inp2.dataset.note,inp2.value);break;}
+  case "dropadd":{
+    var ed=findEntry(gid,exId);if(!ed)return;var sd=ed.sets[+b.dataset.i];sd.drops=sd.drops||[];
+    var lastW=sd.drops.length?sd.drops[sd.drops.length-1].w:sd.w;var nw2=lastW?Math.max(0,roundW(lastW*0.7)):null;if(nw2===lastW&&nw2>0)nw2=Math.max(0,nw2-stepFor(nw2));
+    sd.drops.push({w:nw2,r:null});touch();rerender(renderWorkout);
+    var di=document.getElementById("dr-"+exId+"-"+b.dataset.i+"-"+(sd.drops.length-1));if(di)di.focus();break;}
+  case "dropdel":{var ed2=findEntry(gid,exId);if(!ed2)return;var sd2=ed2.sets[+b.dataset.i];if(sd2.drops)sd2.drops.splice(+b.dataset.d,1);touch();rerender(renderWorkout);break;}
   case "collapse":case "expand":{var ec=findEntry(gid,exId);if(!ec)return;ec.collapsed=act==="collapse";touch();rerender(renderWorkout);break;}
   case "collapseall":case "expandall":state.draft.entries.forEach(function(en){en.collapsed=act==="collapseall";});touch();rerender(renderWorkout);break;
   case "reorder":state.reorder=!state.reorder;rerender(renderWorkout);break;
@@ -116,6 +122,17 @@ document.addEventListener("click",function(e){
     });break;}
   case "cardfmt":state.cardFormat=b.dataset.f;openCard(state.modal.date,true);break;
   case "cardre":openCard(state.modal.date,false);break;
+  case "impopen":state.impPreview=null;openModal({type:"import"});break;
+  case "impparse":{var ta2=document.getElementById("impText");state.impText=ta2?ta2.value:"";if(!state.impText.trim())return;
+    state.impPreview=buildImportPreview(state.impText);
+    if(!state.impPreview.length){state.impPreview=null;toast("Не нашла дат. Каждая тренировка должна начинаться со строки вида 11.03");return;}
+    renderModal();document.querySelector(".mbox").scrollTop=0;break;}
+  case "impback":state.impPreview=null;renderModal();break;
+  case "impgo":{
+    var res=applyImport(state.impPreview,!!state.impOver);
+    store.replaceAll();checkAchievements(true);
+    state.impPreview=null;state.impText="";closeModal();render();
+    toast("Перенесено тренировок: "+res.added+(res.skipped?" · пропущено (уже были): "+res.skipped:"")+(res.exAdded?" · новых упражнений: "+res.exAdded:""));break;}
   case "mclose":closeModal();break;
   case "lib":state.libTab=b.dataset.lt||"programs";openModal({type:"library"});break;
   case "libtab":state.libTab=b.dataset.lt;renderModal();break;
@@ -186,7 +203,7 @@ function finishWorkout(){
   rerender(renderWorkout);
 }
 /* Подход записан: время, рекорд, отдых */
-function onSetLogged(en,i){
+function onSetLogged(en,i,noRest){
   var s=en.sets[i];var w=state.draft;
   if(w.date===todayIso()){
     if(!s.t)s.t=Date.now();
@@ -205,6 +222,7 @@ function onSetLogged(en,i){
   }
   /* отдых */
   if(w.date!==todayIso())return;
+  if(noRest){stopRest();return;}
   var partner=partnerOf(en);
   if(partner){
     var pi=partner.sets[i];
@@ -225,15 +243,23 @@ view.addEventListener("input",function(e){
   var en=findEntry(t.dataset.g,t.dataset.e);if(!en)return;
   var s=en.sets[+t.dataset.i];if(!s)return;
   var v=parseNum(t.value);
+  if(t.dataset.f==="dw"||t.dataset.f==="dr"){var d=(s.drops||[])[+t.dataset.d];if(!d)return;if(t.dataset.f==="dr")d.r=v===null?null:Math.round(v);else d.w=v;touch();return;}
   if(t.dataset.f==="r")s.r=v===null?null:Math.round(v);else s.w=v;
   touch();updateSummary();
 });
 view.addEventListener("change",function(e){
   var t=e.target;
+  if(t.dataset&&t.dataset.side){var fsd=findEx(t.dataset.side);if(fsd){fsd.e.side=t.checked;store.saveConfig();refreshCurrent();}return;}
+  if(t.dataset&&t.dataset.f==="dr"){
+    var end=findEntry(t.dataset.g,t.dataset.e);if(!end)return;var si=+t.dataset.i,dd=+t.dataset.d;var sx=end.sets[si];
+    var rowd=t.closest(".set");if(rowd)rowd.classList.toggle("logged",sx.drops[dd].r>0);
+    if(sx.drops[dd].r>0&&dd===sx.drops.length-1&&sx.r>0&&state.draft.date===todayIso()){var rr2=suggestedRest(end.exId,sx);startRest(rr2.sec,exName(end.exId)+" · дроп-сет "+(si+1)+"-го подхода");}
+    touch();return;
+  }
   if(t.dataset&&t.dataset.f==="r"){
     var en=findEntry(t.dataset.g,t.dataset.e);if(!en)return;var i=+t.dataset.i;
     var row=t.closest(".set");if(row)row.classList.toggle("logged",en.sets[i].r>0);
-    if(en.sets[i].r>0){onSetLogged(en,i);touch();ensureSessBar();
+    if(en.sets[i].r>0){onSetLogged(en,i,(en.sets[i].drops||[]).length>0);touch();ensureSessBar();
       if(en.sets.every(function(x){return x.r>0;})&&!en.collapsed){en.collapsed=true;setTimeout(function(){var ae=document.activeElement;if(!(ae&&ae.tagName==="INPUT"&&view.contains(ae)))rerender(renderWorkout);},250);}
     }
     return;
@@ -255,7 +281,7 @@ view.addEventListener("change",function(e){
 });
 view.addEventListener("keydown",function(e){
   if(e.key!=="Enter")return;var t=e.target;
-  if(t.dataset&&(t.dataset.ren||t.dataset.f==="r"||t.dataset.note)){e.preventDefault();t.blur();}
+  if(t.dataset&&(t.dataset.ren||t.dataset.f==="r"||t.dataset.f==="dr"||t.dataset.note)){e.preventDefault();t.blur();}
 });
 view.addEventListener("toggle",function(e){var d=e.target;if(d.dataset&&d.dataset.gd){if(d.open)state.openGroup=d.dataset.gd;else if(state.openGroup===d.dataset.gd)state.openGroup=null;}},true);
 view.addEventListener("submit",function(e){
@@ -275,6 +301,11 @@ view.addEventListener("submit",function(e){
 });
 document.addEventListener("keydown",function(e){if(e.key==="Escape"&&state.modal)closeModal();});
 
+document.getElementById("modal").addEventListener("change",function(e){
+  var t=e.target;
+  if(t.dataset&&t.dataset.imp&&state.impPreview){var a=t.dataset.imp.split(":");var it=state.impPreview[+a[0]].items[+a[1]];it.choice=+t.value;t.closest(".impi").classList.toggle("off",it.choice===-2);}
+  else if(t.id==="impOver")state.impOver=t.checked;
+});
 /* ---------- перетаскивание за ⠿ ---------- */
 var drag=null;
 view.addEventListener("pointerdown",function(e){

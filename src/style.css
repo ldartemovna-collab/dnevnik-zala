@@ -508,3 +508,29 @@ button.kchip{cursor:pointer;min-width:52px}
 .item.pick .ghead h2{font-size:15px;color:var(--ink);text-transform:none;letter-spacing:0}
 .item.pick .ghead .plate{width:22px;height:22px}
 .item.pick .ghead .plate::after{inset:8px}
+/* дроп-сеты и на сторону */
+.set.wrow{grid-template-columns:20px minmax(0,1.3fr) 10px minmax(0,.9fr) 26px 26px}
+.set.drop{grid-template-columns:20px minmax(0,1.3fr) 10px minmax(0,.9fr) 26px 26px;margin-top:-2px}
+.set.drop .n{color:var(--accent);font-size:14px}
+.set.drop .fld input{height:34px;font-size:14px;padding:0 24px 0 6px}
+.set.drop .fld small{position:absolute;right:7px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--muted)}
+.dropb{width:26px;height:34px;border:1px dashed var(--line);border-radius:8px;background:none;color:var(--accent);font-size:15px;font-weight:700;padding:0}
+.set .del{width:26px}
+.sidechip{background:color-mix(in srgb,#0ea5a4 14%,var(--surface));color:#0e8f8e;text-transform:none;letter-spacing:0}
+.sidetg{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);padding:4px 2px}
+.sidetg input{width:18px;height:18px;accent-color:var(--accent)}
+a.tool{text-decoration:none;display:inline-flex;align-items:center;color:var(--muted)}
+.ltools{flex-wrap:wrap;justify-content:flex-end}
+/* перенос из заметок */
+.imptext{width:100%;min-height:220px;border-radius:10px;border:1px solid var(--line);background:var(--surface);padding:10px;font-family:var(--f-num);font-size:13px;line-height:1.45;resize:vertical;color:var(--ink)}
+.implist{display:flex;flex-direction:column;gap:10px}
+.impw{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.impd{font-weight:700;font-size:14px}
+.impi{display:flex;flex-direction:column;gap:4px;padding-top:8px;border-top:1px solid var(--line)}
+.impi:first-of-type{border-top:0;padding-top:0}
+.impi.off{opacity:.45}
+.imraw{font-size:12px;color:var(--muted)}
+.impi .sel{color:var(--ink);font-weight:600}
+.imsets{font-family:var(--f-num);font-size:12px;color:var(--ink)}
+.imsets.bad{color:var(--danger)}
+.btns.sticky{position:sticky;bottom:-18px;background:var(--bg);padding-block:10px;margin-bottom:-6px}

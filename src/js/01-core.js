@@ -10,6 +10,7 @@ var KINDS = {
 var KIND_ORDER = ["heavy","mid","iso","core"];
 var MODES = {w:{name:"С весом",short:"кг"},bw:{name:"Без веса",short:"без веса"},time:{name:"На время",short:"сек"},assist:{name:"С помощью",short:"помощь"}};
 var MODE_ORDER = ["w","bw","time","assist"];
+var SIDE_DEFAULT=["q3","q4","q5","q10","g3","g5","g7","b3","s4","ca3","l3"];
 var MUSCLES = {quads:"Квадрицепс",glutes:"Ягодицы",hams:"Задняя поверхность бедра",hips:"Внешняя и внутренняя часть бедра",back:"Спина",chest:"Грудь",shoulders:"Плечи",biceps:"Бицепс",triceps:"Трицепс",calves:"Икры",abs:"Пресс"};
 var ACCENTS = [["blue","Синий"],["pink","Розовый"],["violet","Фиолетовый"],["green","Зелёный"],["orange","Оранжевый"]];
 
@@ -67,6 +68,7 @@ function fillDefaults(cfg){
       if(e.muscle===undefined&&d&&d.muscle)e.muscle=d.muscle;
       if(e.backRisk===undefined&&d&&d.backRisk)e.backRisk=true;
       if(e.mode===undefined&&d&&d.mode)e.mode=d.mode;
+      if(e.side===undefined&&SIDE_DEFAULT.indexOf(e.id)>=0)e.side=true;
     });
   });
   var s=cfg.settings=cfg.settings||{};
@@ -171,6 +173,10 @@ function findEx(id){var gs=groups();for(var i=0;i<gs.length;i++){for(var j=0;j<g
 function exName(id){var f=findEx(id);return f?f.e.name:"Упражнение удалено";}
 function exKind(id){var f=findEx(id);return f&&KINDS[f.e.kind]?f.e.kind:"mid";}
 function exMode(id){var f=findEx(id);return f&&MODES[f.e.mode]?f.e.mode:"w";}
+function exSide(id){var f=findEx(id);return !!(f&&f.e.side);}
+function dropChain(s){return [s.w||0].concat((s.drops||[]).filter(function(d){return d.r>0||d.w>0;}).map(function(d){return d.w||0;}));}
+function dropReps(s){var rs=[s.r].concat((s.drops||[]).filter(function(d){return d.r>0;}).map(function(d){return d.r;}));return rs.every(function(x){return x===rs[0];})?String(rs[0]):rs.join("/");}
+function hasDrops(s){return (s.drops||[]).some(function(d){return d.r>0;});}
 function fmtSet(exId,w,r){var m=exMode(exId);if(m==="time")return r+" сек";if(m==="assist")return "помощь "+fmtNum(w||0)+" кг × "+r;return (w?fmtNum(w)+" кг × ":"")+r;}
 /* Упражнения без веса, по которым раньше записывали вес, оставляем «с весом» */
 function fixModesByHistory(){
@@ -213,7 +219,7 @@ function workoutRecords(w){
   });
   return out;
 }
-function tonnage(w){var t=0;(w.entries||[]).forEach(function(en){if(exMode(en.exId)==="assist")return;workSets(en).forEach(function(s){t+=(s.w||0)*s.r;});});return t;}
+function tonnage(w){var t=0;(w.entries||[]).forEach(function(en){if(exMode(en.exId)==="assist")return;var k=exSide(en.exId)?2:1;workSets(en).forEach(function(s){t+=((s.w||0)*s.r+(s.drops||[]).reduce(function(a,d){return a+(d.w||0)*(d.r||0);},0))*k;});});return t;}
 function setsCount(w){var n=0;(w.entries||[]).forEach(function(en){n+=workSets(en).length;});return n;}
 function workoutDuration(w){
   if(!w.startedAt)return null;
@@ -247,11 +253,20 @@ function recommend(exId,date){
   return res;
 }
 function setsText(entry){
+  var t=setsText0(entry);if(!t)return t;
+  return t+(exSide(entry.exId)?" (на сторону)":"");
+}
+function setsText0(entry){
   var ws=workSets(entry);if(!ws.length)return "";
   var mode=exMode(entry.exId);
   if(mode==="time")return ws.map(function(s){return s.r;}).join(", ")+" сек";
   if(mode==="bw")return ws.map(function(s){return s.r;}).join(", ")+" раз";
   if(mode==="assist"){var same=ws.every(function(s){return s.w===ws[0].w;});return same?"помощь "+fmtNum(ws[0].w||0)+" кг × "+ws.map(function(s){return s.r;}).join(", "):"помощь "+ws.map(function(s){return fmtNum(s.w||0)+"×"+s.r;}).join(", ");}
+  if(ws.some(hasDrops)){
+    var ch=ws.map(function(s){return dropChain(s).map(fmtNum).join("→");});
+    if(ch.every(function(c){return c===ch[0];}))return ch[0]+" кг × "+ws.map(dropReps).join(", ");
+    return ws.map(function(s,i){return ch[i]+"×"+dropReps(s);}).join(", ");
+  }
   var sameW=ws.every(function(s){return s.w===ws[0].w;});
   if(sameW)return (ws[0].w?fmtNum(ws[0].w)+" кг × ":"")+ws.map(function(s){return s.r;}).join(", ");
   return ws.map(function(s){return (s.w?fmtNum(s.w)+"×":"")+s.r;}).join(", ");
@@ -261,6 +276,9 @@ function newEntry(gid,exId){
   var md=exMode(exId);
   var w=((md==="w"&&rec.w>0)||(md==="assist"&&rec.w!==undefined))?rec.w:null;
   var sets=[];for(var i=0;i<rec.R.sets;i++)sets.push({w:w,r:null});
+  /* был дроп-сет — повторяем схему сброса */
+  if(md==="w"&&rec.last){var ls=workSets(rec.last.entry).filter(hasDrops)[0];
+    if(ls){var shift=(w||0)-(ls.w||0);sets.forEach(function(s){s.drops=ls.drops.filter(function(d){return d.r>0;}).map(function(d){return {w:Math.max(0,Math.round(((d.w||0)+shift)*100)/100),r:null};});});}}
   return {gid:gid,exId:exId,sets:sets};
 }
 function entryDone(en){return workSets(en).length>0;}
