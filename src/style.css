@@ -480,3 +480,31 @@ button.kchip{cursor:pointer;min-width:52px}
 .sess > .dot{flex:0 0 9px;width:9px;height:9px}
 .catsearch{-webkit-appearance:none;appearance:none;min-height:44px}
 .sess > .dot{flex:0 0 9px;width:9px}
+/* карточки упражнений и перетаскивание */
+.items{display:flex;flex-direction:column;gap:12px}
+.grip{flex:none;width:30px;height:36px;margin:-6px 0 -6px -4px;display:grid;place-items:center;font-size:20px;line-height:1;color:var(--muted);cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;border-radius:8px}
+.grip:active{cursor:grabbing;background:var(--surface-2);color:var(--accent)}
+.item.dragging{position:fixed;z-index:50;margin:0;box-shadow:var(--shadow);opacity:.96;pointer-events:none;transform:scale(1.02)}
+.dragph{border:2px dashed color-mix(in srgb,var(--accent) 55%,var(--line));border-radius:14px;background:var(--accent-soft)}
+.item .log{border-top:0;padding-top:0}
+.item.cmp1{flex-direction:row;align-items:center;gap:6px;padding:8px 10px}
+.item.cmp1 .logc{flex:1;min-width:0;display:grid;grid-template-columns:minmax(0,1fr);gap:1px;border:0;background:none;padding:2px 0;text-align:left;color:var(--ink)}
+.item.cmp1 .logc.static{cursor:default}
+.lgrp{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.lgrp .plate{width:14px;height:14px}
+.lgrp .plate::after{inset:5px}
+.item.cmp1 .lcn{font-size:14.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item.cmp1 .lcs{font-family:var(--f-num);font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item.cmp1 .lcv{color:var(--muted);font-size:14px;flex:none}
+.item.cmp1.done{border-color:color-mix(in srgb,var(--good) 45%,var(--line));background:color-mix(in srgb,var(--good) 7%,var(--surface))}
+.item.pick .ghead h2{flex:1}
+.item.cmp1 .logc > *{grid-row:auto;grid-column:auto}
+.item .lhead h3{flex:1 1 100%;font-size:16px;line-height:1.25}
+.item .lhead .sp{display:none}
+.item .lhead .ltools{margin-left:auto}
+.item .ghead h2{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.item .ghead .plate{width:16px;height:16px}
+.item .ghead .plate::after{inset:6px}
+.item.pick .ghead h2{font-size:15px;color:var(--ink);text-transform:none;letter-spacing:0}
+.item.pick .ghead .plate{width:22px;height:22px}
+.item.pick .ghead .plate::after{inset:8px}

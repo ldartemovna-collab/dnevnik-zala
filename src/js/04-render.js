@@ -97,9 +97,9 @@ function loggerHtml(gid,en,showName,groupExIds){
   var swapHtml='';
   if(state.swap===entryKey(en)){
     var alts=swapOptions(en);
-    swapHtml='<div class="swap"><div class="swaptitle">Тренажёр занят? Замени на:</div><div class="chips">'+(alts.length?alts.map(function(id){return '<button class="chip" data-act="swapto" data-g="'+gid+'" data-e="'+en.exId+'" data-to="'+id+'">'+esc(exName(id))+'</button>';}).join(""):'<span class="hint">Нет похожих упражнений — добавь в «Настройках»</span>')+'</div><button class="linkbtn" data-act="swapcancel">отмена</button></div>';
+    swapHtml='<div class="swap"><div class="swaptitle">Тренажёр занят? Замени на:</div><div class="chips">'+(alts.length?alts.map(function(id){return '<button class="chip" data-act="swapto" data-g="'+gid+'" data-e="'+en.exId+'" data-to="'+id+'">'+esc(exName(id))+'</button>';}).join(""):'<span class="hint">Нет похожих упражнений</span>')+'<button class="chip more" data-act="catalog" data-g="'+gid+'" data-c="1">+ из каталога</button></div><button class="linkbtn" data-act="swapcancel">отмена</button></div>';
   }
-  var head='<div class="lhead">'+((showName||foreign)?'<h3>'+esc(exName(en.exId))+'</h3>':'<span class="sp"></span>')+modeChip(en.exId)+kindChip(en.exId)+
+  var head='<div class="lhead"><h3>'+esc(exName(en.exId))+'</h3>'+modeChip(en.exId)+kindChip(en.exId)+
     (f&&f.e.backRisk?'<span class="risk" title="Нагрузка на поясницу">⚠️</span>':'')+
     '<span class="ltools"><button class="tool" data-act="swap" data-g="'+gid+'" data-e="'+en.exId+'" title="Тренажёр занят">⇄ Занято</button>'+
     (partner?'':'<button class="tool'+(state.ssPick===entryKey(en)?' on':'')+'" data-act="sspick" data-g="'+gid+'" data-e="'+en.exId+'" title="Суперсет">🔗</button>')+
@@ -113,19 +113,34 @@ function collapsedHtml(gid,en){
   var all=en.sets.length&&en.sets.every(function(s){return s.r>0;});
   return '<button class="logc'+(all?' full':'')+'" data-act="expand" data-g="'+gid+'" data-e="'+en.exId+'" aria-label="Развернуть подходы"><span class="lcn">'+(all?'✓ ':'')+esc(exName(en.exId))+'</span><span class="lcs">'+esc(txt)+'</span><span class="lcv">▾</span></button>';
 }
-function reorderHtml(slots){
-  var h='<div class="card reord"><div class="hrow"><b>Порядок упражнений</b><button class="btn primary" data-act="orddone">Готово</button></div><p class="hint left">Стрелками меняй местами группы и упражнения в сегодняшней тренировке.</p>';
-  slots.forEach(function(s,i){
-    var g=group(s.gid);var ents=state.draft.entries.filter(function(en){return en.gid===s.gid;});
-    h+='<div class="orow"><span class="oname">'+esc(g.name)+(ents.length===1?'<small>'+esc(exName(ents[0].exId))+'</small>':'')+'</span>'+
-      '<span class="mv"><button data-act="ordmv" data-g="'+s.gid+'" data-d="-1" aria-label="Выше"'+(i===0?' disabled':'')+'>↑</button><button data-act="ordmv" data-g="'+s.gid+'" data-d="1" aria-label="Ниже"'+(i===slots.length-1?' disabled':'')+'>↓</button></span></div>';
-    if(ents.length>1)ents.forEach(function(en,k){
-      h+='<div class="orow sub"><span class="oname">'+esc(exName(en.exId))+'</span><span class="mv"><button data-act="entmv" data-g="'+s.gid+'" data-e="'+en.exId+'" data-d="-1" aria-label="Выше"'+(k===0?' disabled':'')+'>↑</button><button data-act="entmv" data-g="'+s.gid+'" data-e="'+en.exId+'" data-d="1" aria-label="Ниже"'+(k===ents.length-1?' disabled':'')+'>↓</button></span></div>';
-    });
-  });
-  var p=program(state.draft.programId);
-  if(p)h+='<button class="btn" data-act="ordsave">Сохранить этот порядок в программе «'+esc(p.name)+'»</button>';
-  return h+'</div>';
+function gripHtml(){return '<span class="grip" role="button" aria-label="Перетащить" title="Зажми и перетащи">⠿</span>';}
+function itemCard(it,compactAll){
+  var s=it.s,g=group(s.gid);var pl=plate(it.si);
+  if(it.type==="e"){
+    var en=it.en,done=entryDone(en);
+    var exIds=g.ex.filter(function(e){return !e.archived;}).map(function(e){return e.id;});
+    if(compactAll||en.collapsed){
+      var all=en.sets.length&&en.sets.every(function(x){return x.r>0;});
+      var txt=done?setsText(en):en.sets.length+" "+plural(en.sets.length,"подход","подхода","подходов")+" · ещё не начато";
+      return '<section class="group item cmp1'+(all?' done':'')+'" data-key="'+esc(it.k)+'">'+gripHtml()+
+        '<button class="logc" data-act="'+(compactAll?'orddone':'expand')+'" data-g="'+en.gid+'" data-e="'+en.exId+'"><span class="lgrp">'+pl+esc(g.name)+'</span><span class="lcn">'+(all?'✓ ':'')+esc(exName(en.exId))+'</span><span class="lcs">'+esc(txt)+'</span></button>'+
+        (compactAll?'':'<span class="lcv" aria-hidden="true">▾</span>')+'</section>';
+    }
+    return '<section class="group item'+(done?' done':'')+'" data-key="'+esc(it.k)+'" data-group="'+g.id+'"><div class="ghead">'+gripHtml()+pl+'<h2>'+esc(g.name)+'</h2>'+(done?'<span class="check">✓</span>':'')+'</div>'+
+      loggerHtml(g.id,en,true,exIds)+'</section>';
+  }
+  var ents=it.ents;
+  var exIds2=g.ex.filter(function(e){return !e.archived;}).map(function(e){return e.id;});
+  var left=s.count-ents.length;
+  if(compactAll)return '<section class="group item cmp1 pick" data-key="'+esc(it.k)+'">'+gripHtml()+'<span class="logc static"><span class="lgrp">'+pl+esc(g.name)+'</span><span class="lcs">'+(ents.length?'можно ещё '+left:'упражнение не выбрано')+'</span></span></section>';
+  var chips=exIds2.map(function(id){
+    var on=ents.some(function(en){return en.exId===id;});
+    var star=s.pref&&s.pref.indexOf(id)>=0;
+    return '<button class="chip'+(on?' on':'')+(star?' pref':'')+'" data-act="pick" data-g="'+g.id+'" data-e="'+id+'" data-c="'+s.count+'" aria-pressed="'+on+'">'+(star?'★ ':'')+esc(exName(id))+'</button>';
+  }).join("");
+  var tag=ents.length?'<span class="tag">ещё '+left+' из '+s.count+'</span>':(s.count>1?'<span class="tag">до '+s.count+' упр.</span>':(s.extra?'<span class="tag">вне плана</span>':'<span class="tag">выбери</span>'));
+  return '<section class="group item pick" data-key="'+esc(it.k)+'" data-group="'+g.id+'"><div class="ghead">'+gripHtml()+pl+'<h2>'+esc(g.name)+'</h2>'+tag+'</div>'+
+    '<div class="chips">'+chips+'<button class="chip more" data-act="catalog" data-g="'+g.id+'" data-c="'+s.count+'">+ ещё упражнения</button></div></section>';
 }
 function swapOptions(en){
   var used={};state.draft.entries.forEach(function(x){used[x.exId]=true;});
@@ -185,24 +200,14 @@ function renderWorkout(){
   if(!slots.length)h+='<div class="empty">В этой тренировке пока нет групп мышц.<br>Добавь их в «Настройки» → «Мои тренировки».</div>';
   if(slots.length){
     var anyEnt=state.draft.entries.length>0;var allC=anyEnt&&state.draft.entries.every(function(en){return en.collapsed;});
-    h+='<div class="wtools"><button class="tool'+(state.reorder?' on':'')+'" data-act="reorder">⇅ Порядок</button>'+(anyEnt?'<button class="tool" data-act="'+(allC?'expandall':'collapseall')+'">'+(allC?'▾ Развернуть всё':'▴ Свернуть всё')+'</button>':'')+'</div>';
+    h+='<div class="wtools"><button class="tool'+(state.reorder?' on':'')+'" data-act="reorder">⠿ Порядок</button>'+(anyEnt?'<button class="tool" data-act="'+(allC?'expandall':'collapseall')+'">'+(allC?'▾ Развернуть всё':'▴ Свернуть всё')+'</button>':'')+'</div>';
   }
-  if(state.reorder){view.innerHTML=h+reorderHtml(slots);return;}
-  slots.forEach(function(s,si){
-    var g=group(s.gid);
-    var entries=state.draft.entries.filter(function(en){return en.gid===s.gid;});
-    var exIds=g.ex.filter(function(e){return !e.archived;}).map(function(e){return e.id;});
-    var chips=exIds.map(function(id){
-      var on=entries.some(function(en){return en.exId===id;});
-      var star=s.pref&&s.pref.indexOf(id)>=0;
-      return '<button class="chip'+(on?' on':'')+(star?' pref':'')+'" data-act="pick" data-g="'+g.id+'" data-e="'+id+'" data-c="'+s.count+'" aria-pressed="'+on+'">'+(star?'★ ':'')+esc(exName(id))+'</button>';
-    }).join("");
-    var tag=groupDone(s.gid)?'<span class="check">✓</span>':(s.count>1?'<span class="tag">до '+s.count+' упр.</span>':(s.extra?'<span class="tag">вне плана</span>':''));
-    var compact=entries.length&&entries.every(function(en){return en.collapsed;});
-    h+='<section class="group'+(groupDone(s.gid)?' done':'')+(compact?' compact':'')+'" data-group="'+g.id+'"><div class="ghead">'+plate(si)+'<h2>'+esc(g.name)+'</h2>'+tag+'</div>'+
-      (compact?'':'<div class="chips">'+chips+'<button class="chip more" data-act="catalog" data-g="'+g.id+'" data-c="'+s.count+'">+ ещё упражнения</button></div>')+
-      entries.map(function(en){return en.collapsed?collapsedHtml(g.id,en):loggerHtml(g.id,en,s.count>1,exIds);}).join("")+'</section>';
-  });
+  var items=workoutItems();
+  if(state.reorder){
+    h+='<div class="card reord"><div class="hrow"><b>Порядок упражнений</b><button class="btn primary" data-act="orddone">Готово</button></div><p class="hint left">Зажми ⠿ и перетащи упражнение на нужное место.</p></div>';
+  }
+  h+='<div class="items" id="items">'+items.map(function(it){return itemCard(it,state.reorder);}).join("")+'</div>';
+  if(state.reorder){var pr=program(state.draft.programId);if(pr)h+='<button class="btn" data-act="ordsave">Сохранить этот порядок в программе «'+esc(pr.name)+'»</button>';}
   if(state.draft.entries.some(entryDone)&&!state.draft.finishedAt&&state.date===todayIso())h+='<button class="btn primary wide" data-act="finish">Завершить тренировку</button>';
   h+='<p class="hint">Вес подставляется по прошлой тренировке — впиши повторы, и запустится отдых.</p>';
   view.innerHTML=h;

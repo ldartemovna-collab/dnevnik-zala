@@ -272,9 +272,26 @@ function currentSlots(){
     if(!slots.some(function(s){return s.gid===en.gid;})&&group(en.gid))slots.push({gid:en.gid,count:1,extra:true});
   });
   slots.forEach(function(s){var n=state.draft.entries.filter(function(en){return en.gid===s.gid;}).length;if(n>s.count)s.count=n;});
-  var ord=state.draft.order;
-  if(ord&&ord.length){slots.forEach(function(s,i){s._i=i;});slots.sort(function(a,b){var ia=ord.indexOf(a.gid),ib=ord.indexOf(b.gid);if(ia<0)ia=999+a._i;if(ib<0)ib=999+b._i;return ia-ib;});}
   return slots;
+}
+/* Плоский список карточек тренировки: каждое упражнение отдельно + группы, где ещё надо выбрать.
+   Ключи: "e:группа|упражнение" и "g:группа". Порядок хранится в draft.order. */
+function workoutItems(){
+  var slots=currentSlots();var items=[];
+  slots.forEach(function(s,si){
+    var ents=state.draft.entries.filter(function(en){return en.gid===s.gid;});
+    ents.forEach(function(en){items.push({k:"e:"+en.gid+"|"+en.exId,type:"e",s:s,si:si,en:en});});
+    if(ents.length<s.count||!ents.length)items.push({k:"g:"+s.gid,type:"g",s:s,si:si,ents:ents});
+  });
+  var ord=state.draft.order||((program(state.draft.programId)||{}).order);
+  if(ord&&ord.length){
+    /* старый формат: список групп */
+    if(ord.every(function(k){return k.indexOf(":")<0;})){var exp=[];ord.forEach(function(gid){items.forEach(function(it){if(it.s.gid===gid)exp.push(it.k);});});ord=exp;}
+    var last=-1,c=0;
+    items.forEach(function(it,i){var r=ord.indexOf(it.k);if(r<0){c++;r=last+c*0.001;}else{c=0;}it._r=r;it._i=i;last=r;});
+    items.sort(function(a,b){return a._r-b._r||a._i-b._i;});
+  }
+  return items;
 }
 /* Следующая тренировка по очереди: после последней сделанной программы */
 function nextProgramId(before){

@@ -91,6 +91,15 @@ TEMPLATES.push(
    desc:"Пять упражнений на всё тело, когда совсем нет времени. Можно делать кругом.",
    programs:[{name:"Дом · 20 минут",reps:{lo:15,hi:15,sets:2},slots:[["q",1,["q9"]],["c",1,["c8"]],["g",1,["g6"]],["b",1,["b8"]],["ab",1,["ab1"]]]}]}
 );
+TEMPLATES.unshift(
+  {id:"t_trainer3",name:"Как у тренера: Ноги · Спина · Грудь и плечи",freq:"3 раза в неделю по кругу",level:"Средний",back:"care",
+   desc:"Сплит на 3 дня: отдельный день ног и ягодиц, день спины с руками и день груди с плечами. Повторов много (12–15) и по 4 подхода — объём и рельеф.",
+   programs:[
+    {name:"Ноги и ягодицы",reps:{lo:12,hi:15,sets:4},slots:[["g",2,["@Гиперэкстензия на ягодицы","@Ягодичный мост со штангой"]],["h",2,["@Сгибание ног лёжа","@Румынская тяга в Смите","@Сгибание ног сидя"]],["q",1,["@Жим ногами горизонтальный","@Боковое приседание на одной ноге с тумбы","@Зашагивания на платформу","@Выпады на месте"]],["l",1,["@Отведение бёдер в тренажёре","@Сведение бёдер в тренажёре"]],["ca",1,["@Подъёмы на носки на одной ноге"]]]},
+    {name:"Спина и руки",reps:{lo:12,hi:15,sets:4},slots:[["b",4,["@Подтягивания в гравитроне","@Тяга верхнего блока узким хватом","@Тяга верхнего блока широким хватом","@Пуловер на верхнем блоке","@Тяга гантелей в наклоне с упором","@Подтягивания с резинкой"]],["tr",1,["@Разгибания на блоке с канатом","@Французский жим с гантелями"]],["bi",1,["@Молотки","@Сгибания на наклонной скамье"]],["ab",1,["@Скручивания","@Боковая планка"]]]},
+    {name:"Грудь и плечи",reps:{lo:12,hi:15,sets:4},slots:[["c",3,["@Отжимания с колен","@Жим гантелей","@Разводка гантелей","@Обратные отжимания от скамьи"]],["s",4,["@Жим Арнольда","@Тяга гантелей к подбородку","@Махи в стороны","@Разводка в кроссовере на заднюю дельту","@Жим гантелей сидя","@Подъём блина перед собой"]]]}
+  ]}
+);
 var BACK_LABEL={safe:"Бережно для спины",care:"Следить за техникой",risky:"Нагрузка на поясницу"};
 
 /* ---------- планы на месяц ---------- */
@@ -130,6 +139,15 @@ function ensureEx(gid,exId){
   if(!de)return false;
   g.ex.push(clone(de));return true;
 }
+/* "@Название" в программе — упражнение из каталога; добавляется в группу при установке */
+function resolveEx(gid,exId){
+  if(exId.charAt(0)!=="@")return ensureEx(gid,exId)?exId:null;
+  var name=exId.slice(1);var g=group(gid);
+  if(!g){var dg=DEFAULT_GROUPS.filter(function(x){return x.id===gid;})[0];if(!dg)return null;g=clone(dg);g.ex=[];state.config.groups.push(g);}
+  if(g.archived)g.archived=false;
+  var c=CATALOG.filter(function(x){return x.name===name;})[0];if(!c)return null;
+  return addFromCatalog(gid,c.id);
+}
 function installTemplate(tid,replace){
   var t=TEMPLATES.filter(function(x){return x.id===tid;})[0];if(!t)return;
   if(replace)state.config.programs.forEach(function(p){p.archived=true;});
@@ -138,7 +156,7 @@ function installTemplate(tid,replace){
   t.programs.forEach(function(tp){
     var slots=[];
     tp.slots.forEach(function(s){
-      var pref=(s[2]||[]).filter(function(exId){return ensureEx(s[0],exId);});
+      var pref=(s[2]||[]).map(function(exId){return resolveEx(s[0],exId);}).filter(Boolean);
       if(!group(s[0]))return;
       slots.push({gid:s[0],count:s[1]||1,pref:pref});
     });
@@ -153,7 +171,7 @@ function installTemplate(tid,replace){
   return firstId;
 }
 
-function defExName(id){var f=findEx(id);if(f)return f.e.name;for(var i=0;i<DEFAULT_GROUPS.length;i++){var e=DEFAULT_GROUPS[i].ex.filter(function(x){return x.id===id;})[0];if(e)return e.name;}return id;}
+function defExName(id){if(id.charAt(0)==="@")return id.slice(1);var f=findEx(id);if(f)return f.e.name;for(var i=0;i<DEFAULT_GROUPS.length;i++){var e=DEFAULT_GROUPS[i].ex.filter(function(x){return x.id===id;})[0];if(e)return e.name;}return id;}
 function defGroupName(gid){var g=DEFAULT_GROUPS.filter(function(x){return x.id===gid;})[0];return g?g.name:(group(gid)?group(gid).name:gid);}
 function templatePreview(t){
   return '<details class="tprev"><summary>Посмотреть программу</summary>'+t.programs.map(function(p){
