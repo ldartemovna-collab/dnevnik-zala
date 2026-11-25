@@ -114,7 +114,8 @@ function loggerHtml(gid,en,showName,groupExIds){
     (f&&f.e.backRisk?'<span class="risk" title="Нагрузка на поясницу">⚠️</span>':'')+
     '<span class="ltools"><a class="tool" href="'+yt+'"'+(window.Capacitor?'':' target="_blank" rel="noopener"')+' title="Видео с техникой">▶ Как делать</a><button class="tool" data-act="swap" data-g="'+gid+'" data-e="'+en.exId+'" title="Тренажёр занят">⇄ Занято</button>'+
     (partner?'':'<button class="tool'+(state.ssPick===entryKey(en)?' on':'')+'" data-act="sspick" data-g="'+gid+'" data-e="'+en.exId+'" title="Суперсет">🔗</button>')+
-    '<button class="tool" data-act="collapse" data-g="'+gid+'" data-e="'+en.exId+'" aria-label="Свернуть подходы" title="Свернуть">▴</button></span></div>';
+    '<button class="tool" data-act="collapse" data-g="'+gid+'" data-e="'+en.exId+'" aria-label="Свернуть подходы" title="Свернуть">▴</button>'+
+    '<button class="tool rmx'+(state.rmAsk===gid+"|"+en.exId?' on':'')+'" data-act="rmentry" data-g="'+gid+'" data-e="'+en.exId+'" aria-label="Убрать упражнение из тренировки" title="Убрать">✕</button></span></div>';
   head+=modePicker(en.exId);
   return '<div class="log'+(partner?' inss':'')+'" data-entry="'+esc(entryKey(en))+'">'+head+swapHtml+ssHtml+noteHtml+recHtml(en.exId)+
     '<div class="sets">'+rows+'</div><button class="addset" data-act="addset" data-g="'+gid+'" data-e="'+en.exId+'">+ подход</button></div>';
@@ -135,7 +136,7 @@ function itemCard(it,compactAll){
       var txt=done?setsText(en):en.sets.length+" "+plural(en.sets.length,"подход","подхода","подходов")+" · ещё не начато";
       return '<section class="group item cmp1'+(all?' done':'')+'" data-key="'+esc(it.k)+'">'+gripHtml()+
         '<button class="logc" data-act="'+(compactAll?'orddone':'expand')+'" data-g="'+en.gid+'" data-e="'+en.exId+'"><span class="lgrp">'+pl+esc(g.name)+'</span><span class="lcn">'+(all?'✓ ':'')+esc(exName(en.exId))+'</span><span class="lcs">'+esc(txt)+'</span></button>'+
-        (compactAll?'':'<span class="lcv" aria-hidden="true">▾</span>')+'</section>';
+        (compactAll?'':'<button class="tool rmx'+(state.rmAsk===en.gid+"|"+en.exId?' on':'')+'" data-act="rmentry" data-g="'+en.gid+'" data-e="'+en.exId+'" aria-label="Убрать упражнение" title="Убрать">✕</button>')+'</section>';
     }
     return '<section class="group item'+(done?' done':'')+'" data-key="'+esc(it.k)+'" data-group="'+g.id+'"><div class="ghead">'+gripHtml()+pl+'<h2>'+esc(g.name)+'</h2>'+(done?'<span class="check">✓</span>':'')+'</div>'+
       loggerHtml(g.id,en,true,exIds)+'</section>';

@@ -24,9 +24,19 @@ document.addEventListener("click",function(e){
   var act=b.dataset.act,gid=b.dataset.g,exId=b.dataset.e,id=b.dataset.id;
   var ents=state.draft.entries;
   switch(act){
-  case "prog":
+  case "prog":{
     state.draft.programId=b.dataset.p;state.config.lastProgram=b.dataset.p;
-    if(ents.length)touch();store.saveConfig();rerender(renderWorkout);break;
+    /* убираем невыполненные упражнения, которых нет в выбранной программе */
+    var np=program(b.dataset.p);var before=ents.length;
+    state.draft.entries=ents.filter(function(en){return entryDone(en)||(np&&np.slots.some(function(s){return s.gid===en.gid;}));});
+    if(before||state.draft.entries.length!==before)touch();store.saveConfig();rerender(renderWorkout);
+    var kept=state.draft.entries.filter(function(en){return np&&!np.slots.some(function(s){return s.gid===en.gid;});}).length;
+    if(kept)toast("Начатые упражнения из другой тренировки оставила — их можно убрать кнопкой ✕");
+    break;}
+  case "rmentry":{
+    var key=gid+"|"+exId;var er=findEntry(gid,exId);if(!er)return;
+    if(entryDone(er)&&state.rmAsk!==key){state.rmAsk=key;rerender(renderWorkout);toast("В упражнении уже есть подходы — нажми ✕ ещё раз, чтобы убрать");return;}
+    state.rmAsk=null;state.draft.entries=state.draft.entries.filter(function(x){return x!==er;});touch();rerender(renderWorkout);break;}
   case "pick":{
     var count=+b.dataset.c||1;
     var idx=-1;ents.forEach(function(en,i){if(en.gid===gid&&en.exId===exId)idx=i;});
