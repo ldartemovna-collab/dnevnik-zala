@@ -290,6 +290,8 @@ function currentSlots(){
     if(!slots.some(function(s){return s.gid===en.gid;})&&group(en.gid))slots.push({gid:en.gid,count:1,extra:true});
   });
   slots.forEach(function(s){var n=state.draft.entries.filter(function(en){return en.gid===s.gid;}).length;if(n>s.count)s.count=n;});
+  var sk=state.draft.skip||[];
+  slots=slots.filter(function(s){return sk.indexOf(s.gid)<0||state.draft.entries.some(function(en){return en.gid===s.gid;});});
   return slots;
 }
 /* Плоский список карточек тренировки: каждое упражнение отдельно + группы, где ещё надо выбрать.
@@ -299,7 +301,7 @@ function workoutItems(){
   slots.forEach(function(s,si){
     var ents=state.draft.entries.filter(function(en){return en.gid===s.gid;});
     ents.forEach(function(en){items.push({k:"e:"+en.gid+"|"+en.exId,type:"e",s:s,si:si,en:en});});
-    if(ents.length<s.count||!ents.length)items.push({k:"g:"+s.gid,type:"g",s:s,si:si,ents:ents});
+    if((ents.length<s.count||!ents.length)&&(state.draft.skip||[]).indexOf(s.gid)<0)items.push({k:"g:"+s.gid,type:"g",s:s,si:si,ents:ents});
   });
   var ord=state.draft.order||((program(state.draft.programId)||{}).order);
   if(ord&&ord.length){

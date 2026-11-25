@@ -151,7 +151,7 @@ function itemCard(it,compactAll){
     return '<button class="chip'+(on?' on':'')+(star?' pref':'')+'" data-act="pick" data-g="'+g.id+'" data-e="'+id+'" data-c="'+s.count+'" aria-pressed="'+on+'">'+(star?'★ ':'')+esc(exName(id))+'</button>';
   }).join("");
   var tag=ents.length?'<span class="tag">ещё '+left+' из '+s.count+'</span>':(s.count>1?'<span class="tag">до '+s.count+' упр.</span>':(s.extra?'<span class="tag">вне плана</span>':'<span class="tag">выбери</span>'));
-  return '<section class="group item pick" data-key="'+esc(it.k)+'" data-group="'+g.id+'"><div class="ghead">'+gripHtml()+pl+'<h2>'+esc(g.name)+'</h2>'+tag+'</div>'+
+  return '<section class="group item pick" data-key="'+esc(it.k)+'" data-group="'+g.id+'"><div class="ghead">'+gripHtml()+pl+'<h2>'+esc(g.name)+'</h2>'+tag+'<button class="tool rmx" data-act="skipgrp" data-g="'+g.id+'" aria-label="Убрать группу из сегодняшней тренировки" title="Не делать сегодня">✕</button></div>'+
     '<div class="chips">'+chips+'<button class="chip more" data-act="catalog" data-g="'+g.id+'" data-c="'+s.count+'">+ ещё упражнения</button></div></section>';
 }
 function swapOptions(en){
@@ -219,6 +219,8 @@ function renderWorkout(){
     h+='<div class="card reord"><div class="hrow"><b>Порядок упражнений</b><button class="btn primary" data-act="orddone">Готово</button></div><p class="hint left">Зажми ⠿ и перетащи упражнение на нужное место.</p></div>';
   }
   h+='<div class="items" id="items">'+items.map(function(it){return itemCard(it,state.reorder);}).join("")+'</div>';
+  var sk=(state.draft.skip||[]).filter(function(gid){return group(gid)&&!state.draft.entries.some(function(en){return en.gid===gid;});});
+  if(sk.length&&!state.reorder)h+='<div class="skipped"><span>Убрано сегодня:</span>'+sk.map(function(gid){return '<button class="chip" data-act="unskip" data-g="'+gid+'">↺ '+esc(group(gid).name)+'</button>';}).join("")+'</div>';
   if(state.reorder){var pr=program(state.draft.programId);if(pr)h+='<button class="btn" data-act="ordsave">Сохранить этот порядок в программе «'+esc(pr.name)+'»</button>';}
   if(state.draft.entries.some(entryDone)&&!state.draft.finishedAt&&state.date===todayIso())h+='<button class="btn primary wide" data-act="finish">Завершить тренировку</button>';
   h+='<p class="hint">Вес подставляется по прошлой тренировке — впиши повторы, и запустится отдых.</p>';

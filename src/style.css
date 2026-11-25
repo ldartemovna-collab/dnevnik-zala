@@ -537,3 +537,6 @@ a.tool{text-decoration:none;display:inline-flex;align-items:center;color:var(--m
 .tool.rmx{color:var(--muted)}
 .tool.rmx.on{background:var(--danger);border-color:var(--danger);color:#fff}
 .item.cmp1 .tool.rmx{flex:none;padding:6px 9px}
+.item.pick .ghead .rmx{margin-left:4px;padding:5px 9px}
+.skipped{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.skipped .chip{font-size:12.5px;padding:6px 10px}

@@ -36,8 +36,13 @@ document.addEventListener("click",function(e){
   case "rmentry":{
     var key=gid+"|"+exId;var er=findEntry(gid,exId);if(!er)return;
     if(entryDone(er)&&state.rmAsk!==key){state.rmAsk=key;rerender(renderWorkout);toast("В упражнении уже есть подходы — нажми ✕ ещё раз, чтобы убрать");return;}
-    state.rmAsk=null;state.draft.entries=state.draft.entries.filter(function(x){return x!==er;});touch();rerender(renderWorkout);break;}
+    state.rmAsk=null;state.draft.entries=state.draft.entries.filter(function(x){return x!==er;});
+    state.draft.skip=state.draft.skip||[];if(state.draft.skip.indexOf(gid)<0)state.draft.skip.push(gid);
+    touch();rerender(renderWorkout);break;}
+  case "skipgrp":state.draft.skip=state.draft.skip||[];if(state.draft.skip.indexOf(gid)<0)state.draft.skip.push(gid);touch();rerender(renderWorkout);break;
+  case "unskip":state.draft.skip=(state.draft.skip||[]).filter(function(x){return x!==gid;});touch();rerender(renderWorkout);break;
   case "pick":{
+    if(state.draft.skip)state.draft.skip=state.draft.skip.filter(function(x){return x!==gid;});
     var count=+b.dataset.c||1;
     var idx=-1;ents.forEach(function(en,i){if(en.gid===gid&&en.exId===exId)idx=i;});
     if(idx>=0)ents.splice(idx,1);

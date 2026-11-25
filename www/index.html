@@ -552,6 +552,9 @@ a.tool{text-decoration:none;display:inline-flex;align-items:center;color:var(--m
 .tool.rmx{color:var(--muted)}
 .tool.rmx.on{background:var(--danger);border-color:var(--danger);color:#fff}
 .item.cmp1 .tool.rmx{flex:none;padding:6px 9px}
+.item.pick .ghead .rmx{margin-left:4px;padding:5px 9px}
+.skipped{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.skipped .chip{font-size:12.5px;padding:6px 10px}
 </style>
 </head>
 <body>
@@ -877,6 +880,8 @@ function currentSlots(){
     if(!slots.some(function(s){return s.gid===en.gid;})&&group(en.gid))slots.push({gid:en.gid,count:1,extra:true});
   });
   slots.forEach(function(s){var n=state.draft.entries.filter(function(en){return en.gid===s.gid;}).length;if(n>s.count)s.count=n;});
+  var sk=state.draft.skip||[];
+  slots=slots.filter(function(s){return sk.indexOf(s.gid)<0||state.draft.entries.some(function(en){return en.gid===s.gid;});});
   return slots;
 }
 /* Плоский список карточек тренировки: каждое упражнение отдельно + группы, где ещё надо выбрать.
@@ -886,7 +891,7 @@ function workoutItems(){
   slots.forEach(function(s,si){
     var ents=state.draft.entries.filter(function(en){return en.gid===s.gid;});
     ents.forEach(function(en){items.push({k:"e:"+en.gid+"|"+en.exId,type:"e",s:s,si:si,en:en});});
-    if(ents.length<s.count||!ents.length)items.push({k:"g:"+s.gid,type:"g",s:s,si:si,ents:ents});
+    if((ents.length<s.count||!ents.length)&&(state.draft.skip||[]).indexOf(s.gid)<0)items.push({k:"g:"+s.gid,type:"g",s:s,si:si,ents:ents});
   });
   var ord=state.draft.order||((program(state.draft.programId)||{}).order);
   if(ord&&ord.length){
@@ -2053,7 +2058,7 @@ function itemCard(it,compactAll){
     return '<button class="chip'+(on?' on':'')+(star?' pref':'')+'" data-act="pick" data-g="'+g.id+'" data-e="'+id+'" data-c="'+s.count+'" aria-pressed="'+on+'">'+(star?'★ ':'')+esc(exName(id))+'</button>';
   }).join("");
   var tag=ents.length?'<span class="tag">ещё '+left+' из '+s.count+'</span>':(s.count>1?'<span class="tag">до '+s.count+' упр.</span>':(s.extra?'<span class="tag">вне плана</span>':'<span class="tag">выбери</span>'));
-  return '<section class="group item pick" data-key="'+esc(it.k)+'" data-group="'+g.id+'"><div class="ghead">'+gripHtml()+pl+'<h2>'+esc(g.name)+'</h2>'+tag+'</div>'+
+  return '<section class="group item pick" data-key="'+esc(it.k)+'" data-group="'+g.id+'"><div class="ghead">'+gripHtml()+pl+'<h2>'+esc(g.name)+'</h2>'+tag+'<button class="tool rmx" data-act="skipgrp" data-g="'+g.id+'" aria-label="Убрать группу из сегодняшней тренировки" title="Не делать сегодня">✕</button></div>'+
     '<div class="chips">'+chips+'<button class="chip more" data-act="catalog" data-g="'+g.id+'" data-c="'+s.count+'">+ ещё упражнения</button></div></section>';
 }
 function swapOptions(en){
@@ -2121,6 +2126,8 @@ function renderWorkout(){
     h+='<div class="card reord"><div class="hrow"><b>Порядок упражнений</b><button class="btn primary" data-act="orddone">Готово</button></div><p class="hint left">Зажми ⠿ и перетащи упражнение на нужное место.</p></div>';
   }
   h+='<div class="items" id="items">'+items.map(function(it){return itemCard(it,state.reorder);}).join("")+'</div>';
+  var sk=(state.draft.skip||[]).filter(function(gid){return group(gid)&&!state.draft.entries.some(function(en){return en.gid===gid;});});
+  if(sk.length&&!state.reorder)h+='<div class="skipped"><span>Убрано сегодня:</span>'+sk.map(function(gid){return '<button class="chip" data-act="unskip" data-g="'+gid+'">↺ '+esc(group(gid).name)+'</button>';}).join("")+'</div>';
   if(state.reorder){var pr=program(state.draft.programId);if(pr)h+='<button class="btn" data-act="ordsave">Сохранить этот порядок в программе «'+esc(pr.name)+'»</button>';}
   if(state.draft.entries.some(entryDone)&&!state.draft.finishedAt&&state.date===todayIso())h+='<button class="btn primary wide" data-act="finish">Завершить тренировку</button>';
   h+='<p class="hint">Вес подставляется по прошлой тренировке — впиши повторы, и запустится отдых.</p>';
@@ -2505,8 +2512,13 @@ document.addEventListener("click",function(e){
   case "rmentry":{
     var key=gid+"|"+exId;var er=findEntry(gid,exId);if(!er)return;
     if(entryDone(er)&&state.rmAsk!==key){state.rmAsk=key;rerender(renderWorkout);toast("В упражнении уже есть подходы — нажми ✕ ещё раз, чтобы убрать");return;}
-    state.rmAsk=null;state.draft.entries=state.draft.entries.filter(function(x){return x!==er;});touch();rerender(renderWorkout);break;}
+    state.rmAsk=null;state.draft.entries=state.draft.entries.filter(function(x){return x!==er;});
+    state.draft.skip=state.draft.skip||[];if(state.draft.skip.indexOf(gid)<0)state.draft.skip.push(gid);
+    touch();rerender(renderWorkout);break;}
+  case "skipgrp":state.draft.skip=state.draft.skip||[];if(state.draft.skip.indexOf(gid)<0)state.draft.skip.push(gid);touch();rerender(renderWorkout);break;
+  case "unskip":state.draft.skip=(state.draft.skip||[]).filter(function(x){return x!==gid;});touch();rerender(renderWorkout);break;
   case "pick":{
+    if(state.draft.skip)state.draft.skip=state.draft.skip.filter(function(x){return x!==gid;});
     var count=+b.dataset.c||1;
     var idx=-1;ents.forEach(function(en,i){if(en.gid===gid&&en.exId===exId)idx=i;});
     if(idx>=0)ents.splice(idx,1);
