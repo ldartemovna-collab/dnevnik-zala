@@ -58,6 +58,36 @@ document.addEventListener("click",function(e){
     state.editNote=exId;rerender(renderWorkout);
     var ni=document.getElementById("note-"+exId);if(ni){ni.focus();ni.select();}break;
   case "noteok":{var inp2=document.querySelector("[data-note]");if(inp2)saveNote(inp2.dataset.note,inp2.value);break;}
+  case "collapse":case "expand":{var ec=findEntry(gid,exId);if(!ec)return;ec.collapsed=act==="collapse";touch();rerender(renderWorkout);break;}
+  case "collapseall":case "expandall":state.draft.entries.forEach(function(en){en.collapsed=act==="collapseall";});touch();rerender(renderWorkout);break;
+  case "reorder":state.reorder=!state.reorder;rerender(renderWorkout);break;
+  case "orddone":state.reorder=false;rerender(renderWorkout);break;
+  case "ordmv":{
+    var sl=currentSlots().map(function(x){return x.gid;});var oi=sl.indexOf(gid),oj=oi+(+b.dataset.d);if(oi<0||oj<0||oj>=sl.length)return;
+    var tmp=sl[oi];sl[oi]=sl[oj];sl[oj]=tmp;state.draft.order=sl;if(state.draft.entries.length)touch();rerender(renderWorkout);break;}
+  case "entmv":{
+    var all=state.draft.entries;var idxs=[];all.forEach(function(en,k){if(en.gid===gid)idxs.push(k);});
+    var pos=-1;idxs.forEach(function(k,q){if(all[k].exId===exId)pos=q;});var q2=pos+(+b.dataset.d);if(pos<0||q2<0||q2>=idxs.length)return;
+    var a1=idxs[pos],a2=idxs[q2];var t1=all[a1];all[a1]=all[a2];all[a2]=t1;touch();rerender(renderWorkout);break;}
+  case "ordsave":{
+    var pr2=program(state.draft.programId);if(!pr2)return;var ordr=currentSlots().map(function(x){return x.gid;});
+    pr2.slots.sort(function(x,y){return ordr.indexOf(x.gid)-ordr.indexOf(y.gid);});store.saveConfig();toast("Порядок сохранён в программе «"+esc(pr2.name)+"»");break;}
+  case "catalog":state.catQuery="";state.catAll=false;state.catHome=false;openModal({type:"catalog",gid:gid,count:+b.dataset.c||0,ctx:b.dataset.ctx||"workout"});break;
+  case "catall":state.catAll=!state.catAll;renderModal();applyCatFilter();break;
+  case "cathome":state.catHome=!state.catHome;renderModal();applyCatFilter();break;
+  case "catadd":{
+    var mm=state.modal;if(!mm)return;var newId=addFromCatalog(mm.gid,b.dataset.c);if(!newId)return;
+    store.saveConfig();
+    if(mm.ctx==="workout"){
+      var cnt=mm.count||1;var inG=state.draft.entries.filter(function(en){return en.gid===mm.gid;});
+      if(!inG.some(function(en){return en.exId===newId;})){
+        if(cnt<=1){state.draft.entries=state.draft.entries.filter(function(en){return en.gid!==mm.gid||entryDone(en);});state.draft.entries.push(newEntry(mm.gid,newId));}
+        else if(inG.length<cnt)state.draft.entries.push(newEntry(mm.gid,newId));
+        touch();
+      }
+      closeModal();rerender(renderWorkout);toast("«"+esc(exName(newId))+"» добавлено в группу");
+    }else{renderModal();applyCatFilter();refreshCurrent();}
+    break;}
   case "mode":state.modePick=state.modePick===exId?null:exId;refreshCurrent();break;
   case "modeset":{
     var fm=findEx(exId);if(!fm)return;fm.e.mode=b.dataset.m;state.modePick=null;
@@ -173,8 +203,8 @@ function onSetLogged(en,i){
   /* рекорд */
   var prev=bestBefore(en.exId,w.date);
   w.prs=w.prs||{};
-  var cand={w:s.w||0,r:s.r};var bar=w.prs[en.exId]&&better(w.prs[en.exId],prev)?w.prs[en.exId]:prev;
-  if(prev&&better(cand,bar)&&(cand.w!==bar.w||cand.r!==bar.r)){
+  var cand={w:s.w||0,r:s.r};var bar=w.prs[en.exId]&&betterEx(en.exId,w.prs[en.exId],prev)?w.prs[en.exId]:prev;
+  if(prev&&betterEx(en.exId,cand,bar)&&(cand.w!==bar.w||cand.r!==bar.r)){
     w.prs[en.exId]=cand;confetti();buzz([60,40,60]);
     toast('<span class="big">🏆</span><span><b>Новый рекорд!</b><br>'+esc(exName(en.exId))+' — '+fmtSet(en.exId,cand.w,cand.r)+'</span>',"gold");
   }
@@ -208,7 +238,9 @@ view.addEventListener("change",function(e){
   if(t.dataset&&t.dataset.f==="r"){
     var en=findEntry(t.dataset.g,t.dataset.e);if(!en)return;var i=+t.dataset.i;
     var row=t.closest(".set");if(row)row.classList.toggle("logged",en.sets[i].r>0);
-    if(en.sets[i].r>0){onSetLogged(en,i);touch();ensureSessBar();}
+    if(en.sets[i].r>0){onSetLogged(en,i);touch();ensureSessBar();
+      if(en.sets.every(function(x){return x.r>0;})&&!en.collapsed){en.collapsed=true;setTimeout(function(){var ae=document.activeElement;if(!(ae&&ae.tagName==="INPUT"&&view.contains(ae)))rerender(renderWorkout);},250);}
+    }
     return;
   }
   if(t.dataset&&t.dataset.note){saveNote(t.dataset.note,t.value);return;}

@@ -463,6 +463,37 @@ button.kchip{cursor:pointer;min-width:52px}
 .mchip.open{box-shadow:0 0 0 2px var(--accent)}
 .mpick{margin-top:2px}
 .mpick button{font-size:12px;padding:7px 2px}
+/* каталог, порядок, сворачивание */
+.chip.more{border-style:dashed;color:var(--accent);background:transparent}
+.catsearch{width:100%;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);padding:0 14px;font-size:15px}
+.catsearch:focus{outline:none;border-color:var(--accent)}
+.catlist{display:flex;flex-direction:column;gap:12px}
+.catttl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:2px 2px 4px}
+.citem{display:flex;align-items:center;gap:8px;padding:8px 2px;border-bottom:1px solid var(--line)}
+.citem:last-child{border-bottom:0}
+.cname2{flex:1;min-width:0;font-size:14px;display:flex;flex-wrap:wrap;align-items:center;gap:5px}
+.cb{font-size:10.5px;font-weight:700;background:var(--surface-2);color:var(--muted);border-radius:6px;padding:2px 6px}
+.chas{font-size:12.5px;font-weight:700;color:var(--good);white-space:nowrap}
+.btn.small{padding:6px 10px;font-size:12.5px}
+.wtools{display:flex;gap:6px;flex-wrap:wrap}
+.reord{gap:4px}
+.orow{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
+.orow.sub{padding-left:18px}
+.orow .oname{flex:1;min-width:0;font-size:14px;font-weight:600}
+.orow.sub .oname{font-weight:500;font-size:13px;color:var(--muted)}
+.orow .oname small{display:block;font-weight:400;font-size:12px;color:var(--muted)}
+.orow .mv button{width:40px;height:36px;border:1px solid var(--line);background:var(--surface-2);border-radius:9px;color:var(--ink);font-size:16px}
+.reord > .btn{margin-top:8px;align-self:flex-start}
+.logc{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto;gap:1px 8px;width:100%;text-align:left;border:1px solid var(--line);background:var(--surface-2);border-radius:10px;padding:8px 10px;cursor:pointer}
+.logc.full{background:var(--good-soft);border-color:color-mix(in srgb,var(--good) 35%,var(--line))}
+.lcn{font-size:13.5px;font-weight:700;min-width:0}
+.lcs{grid-row:2;font-family:var(--f-num);font-size:12px;color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lcv{grid-row:1/3;grid-column:2;align-self:center;color:var(--muted)}
+.group.compact{padding:10px 12px;gap:8px}
+.set.assist .wfld{border-color:color-mix(in srgb,#8e4ec6 40%,var(--line))}
+.mchip.m-assist{background:color-mix(in srgb,var(--warm) 16%,var(--surface));color:var(--warm)}
+.sess > .dot{flex:0 0 9px;width:9px;height:9px}
+.catsearch{-webkit-appearance:none;appearance:none;min-height:44px}
 </style>
 </head>
 <body>
@@ -506,8 +537,8 @@ var KINDS = {
   core:{name:"Пресс / икры",short:"Лёгк.",rest:45}
 };
 var KIND_ORDER = ["heavy","mid","iso","core"];
-var MODES = {w:{name:"С весом",short:"кг"},bw:{name:"Без веса",short:"без веса"},time:{name:"На время",short:"сек"}};
-var MODE_ORDER = ["w","bw","time"];
+var MODES = {w:{name:"С весом",short:"кг"},bw:{name:"Без веса",short:"без веса"},time:{name:"На время",short:"сек"},assist:{name:"С помощью",short:"помощь"}};
+var MODE_ORDER = ["w","bw","time","assist"];
 var MUSCLES = {quads:"Квадрицепс",glutes:"Ягодицы",hams:"Задняя поверхность бедра",hips:"Внешняя и внутренняя часть бедра",back:"Спина",chest:"Грудь",shoulders:"Плечи",biceps:"Бицепс",triceps:"Трицепс",calves:"Икры",abs:"Пресс"};
 var ACCENTS = [["blue","Синий"],["pink","Розовый"],["violet","Фиолетовый"],["green","Зелёный"],["orange","Оранжевый"]];
 
@@ -519,7 +550,7 @@ var DEFAULT_GROUPS = [
   G("g","Ягодицы","glutes",[["g1","Ягодичный мост","mid"],["g2","Гиперэкстензия","mid",null,0,"bw"],["g3","Отведение ноги назад","iso"],["g4","Хип-траст со штангой","heavy"],["g5","Мост на одной ноге","iso",null,0,"bw"],["g6","Ягодичный мост лёжа на полу","mid",null,0,"bw"],["g7","Отведение ноги на четвереньках","iso",null,0,"bw"]]),
   G("h","Задняя поверхность бедра","hams",[["h1","Сгибание ног","iso"],["h2","Румынская тяга","heavy",null,1],["h3","Становая тяга","heavy",null,1],["h4","Сгибание ног с пятками на полотенце","iso",null,0,"bw"]]),
   G("l","Ноги, дополнительно","hips",[["l1","Отведение бёдер","iso"],["l2","Сведение бёдер","iso"],["l3","Отведение ноги лёжа на боку","iso",null,0,"bw"],["l4","Шаги в сторону с резинкой","iso",null,0,"bw"]]),
-  G("b","Спина","back",[["b1","Тяга верхнего блока","mid"],["b2","Рычажная тяга","mid"],["b3","Тяга гантели одной рукой","mid"],["b4","Тяга штанги в наклоне","heavy",null,1],["b5","Тяга горизонтального блока","mid"],["b6","Подтягивания в гравитроне","mid"],["b7","Пуловер на верхнем блоке","iso"],["b8","Супермен (лёжа на животе)","core",null,0,"bw"],["b9","Тяга резинки к поясу","mid"],["b10","Тяга гантелей в наклоне с упором","mid"]]),
+  G("b","Спина","back",[["b1","Тяга верхнего блока","mid"],["b2","Рычажная тяга","mid"],["b3","Тяга гантели одной рукой","mid"],["b4","Тяга штанги в наклоне","heavy",null,1],["b5","Тяга горизонтального блока","mid"],["b6","Подтягивания в гравитроне","mid",null,0,"assist"],["b7","Пуловер на верхнем блоке","iso"],["b8","Супермен (лёжа на животе)","core",null,0,"bw"],["b9","Тяга резинки к поясу","mid"],["b10","Тяга гантелей в наклоне с упором","mid"]]),
   G("c","Грудь","chest",[["c1","Жим гантелей","mid"],["c2","Бабочка","iso"],["c3","Разводка гантелей","iso"],["c4","Отжимания","mid",null,0,"bw"],["c5","Жим гантелей на наклонной","mid"],["c6","Жим штанги лёжа","heavy"],["c7","Жим в тренажёре сидя","mid"],["c8","Отжимания с колен","mid",null,0,"bw"],["c9","Жим гантелей лёжа на полу","mid"]]),
   G("s","Плечи","shoulders",[["s1","Армейский жим","heavy",null,1],["s2","Жим гантелей сидя","mid"],["s3","Махи в стороны","iso"],["s4","Отведение на блоке","iso"],["s5","Обратная бабочка","iso"],["s6","Тяга каната к лицу","iso"],["s7","Отжимания уголком (пайк)","mid",null,0,"bw"],["s8","Тяга резинки к лицу","iso"]]),
   G("m","Мини-блок","triceps",[["m1","Трицепс","iso","triceps"],["m2","Икры","core","calves"],["m3","Пресс","core","abs",0,"bw"]]),
@@ -669,12 +700,12 @@ function findEx(id){var gs=groups();for(var i=0;i<gs.length;i++){for(var j=0;j<g
 function exName(id){var f=findEx(id);return f?f.e.name:"Упражнение удалено";}
 function exKind(id){var f=findEx(id);return f&&KINDS[f.e.kind]?f.e.kind:"mid";}
 function exMode(id){var f=findEx(id);return f&&MODES[f.e.mode]?f.e.mode:"w";}
-function fmtSet(exId,w,r){if(exMode(exId)==="time")return r+" сек";return (w?fmtNum(w)+" кг × ":"")+r;}
+function fmtSet(exId,w,r){var m=exMode(exId);if(m==="time")return r+" сек";if(m==="assist")return "помощь "+fmtNum(w||0)+" кг × "+r;return (w?fmtNum(w)+" кг × ":"")+r;}
 /* Упражнения без веса, по которым раньше записывали вес, оставляем «с весом» */
 function fixModesByHistory(){
   if(state.config.modesChecked)return;
   var weighted={};sortedDates().forEach(function(d){state.workouts[d].entries.forEach(function(en){if(workSets(en).some(function(s){return s.w>0;}))weighted[en.exId]=1;});});
-  groups().forEach(function(g){g.ex.forEach(function(e){if(e.mode&&e.mode!=="w"&&weighted[e.id])e.mode="w";});});
+  groups().forEach(function(g){g.ex.forEach(function(e){if(e.mode&&e.mode!=="w"&&e.mode!=="assist"&&weighted[e.id])e.mode="w";});});
   state.config.modesChecked=true;state.cfgDirty=true;
 }
 function exMuscle(id){var f=findEx(id);if(!f)return null;return f.e.muscle||f.g.muscle||null;}
@@ -683,8 +714,10 @@ function sortedDates(){return Object.keys(state.workouts).sort();}
 function doneEntries(w){return (w.entries||[]).filter(function(en){return workSets(en).length>0;});}
 function isWorkoutDone(w){return doneEntries(w).length>0;}
 function programName(id){var p=program(id);return p?p.name:"";}
-function entryTop(en){var ws=workSets(en);if(!ws.length)return null;var top=Math.max.apply(null,ws.map(function(s){return s.w||0;}));var reps=Math.max.apply(null,ws.filter(function(s){return (s.w||0)===top;}).map(function(s){return s.r;}));return {w:top,r:reps};}
+function entryTop(en){var ws=workSets(en);if(!ws.length)return null;var as=exMode(en.exId)==="assist";var ws2=ws.map(function(s){return s.w||0;});var top=as?Math.min.apply(null,ws2):Math.max.apply(null,ws2);var reps=Math.max.apply(null,ws.filter(function(s){return (s.w||0)===top;}).map(function(s){return s.r;}));return {w:top,r:reps};}
 function better(a,b){if(!b)return true;if(!a)return false;return a.w>b.w||(a.w===b.w&&a.r>b.r);}
+/* Для упражнений «с помощью» (гравитрон) лучше — меньше противовес */
+function betterEx(exId,a,b){if(!b)return true;if(!a)return false;if(exMode(exId)==="assist")return a.w<b.w||(a.w===b.w&&a.r>b.r);return better(a,b);}
 
 function lastSession(exId,before){
   var ds=sortedDates();
@@ -697,19 +730,19 @@ function lastSession(exId,before){
 }
 function bestBefore(exId,before){
   var best=null;
-  sortedDates().forEach(function(d){if(d>=before)return;state.workouts[d].entries.forEach(function(en){if(en.exId!==exId)return;workSets(en).forEach(function(s){var c={w:s.w||0,r:s.r};if(better(c,best))best=c;});});});
+  sortedDates().forEach(function(d){if(d>=before)return;state.workouts[d].entries.forEach(function(en){if(en.exId!==exId)return;workSets(en).forEach(function(s){var c={w:s.w||0,r:s.r};if(betterEx(exId,c,best))best=c;});});});
   return best;
 }
 function workoutRecords(w){
   var out=[];
   doneEntries(w).forEach(function(en){
     var prev=bestBefore(en.exId,w.date);if(!prev)return;
-    var top=null;workSets(en).forEach(function(s){var c={w:s.w||0,r:s.r};if(better(c,top))top=c;});
-    if(better(top,prev)&&(top.w!==prev.w||top.r!==prev.r))out.push({exId:en.exId,w:top.w,r:top.r,prev:prev});
+    var top=null;workSets(en).forEach(function(s){var c={w:s.w||0,r:s.r};if(betterEx(en.exId,c,top))top=c;});
+    if(betterEx(en.exId,top,prev)&&(top.w!==prev.w||top.r!==prev.r))out.push({exId:en.exId,w:top.w,r:top.r,prev:prev});
   });
   return out;
 }
-function tonnage(w){var t=0;(w.entries||[]).forEach(function(en){workSets(en).forEach(function(s){t+=(s.w||0)*s.r;});});return t;}
+function tonnage(w){var t=0;(w.entries||[]).forEach(function(en){if(exMode(en.exId)==="assist")return;workSets(en).forEach(function(s){t+=(s.w||0)*s.r;});});return t;}
 function setsCount(w){var n=0;(w.entries||[]).forEach(function(en){n+=workSets(en).length;});return n;}
 function workoutDuration(w){
   if(!w.startedAt)return null;
@@ -725,8 +758,15 @@ function recommend(exId,date){
   var ws=workSets(last.entry);
   var mode=exMode(exId);
   if(mode==="time"){var best=Math.max.apply(null,ws.map(function(s){return s.r;}));return {type:"up",time:true,target:best+5,last:last,R:R};}
-  var top=mode==="bw"?0:Math.max.apply(null,ws.map(function(s){return s.w||0;}));
   var allTop=ws.every(function(s){return s.r>=R.hi;});
+  if(mode==="assist"){
+    var help=Math.min.apply(null,ws.map(function(s){return s.w||0;}));var ra;
+    if(allTop)ra={type:"up",assist:true,w:Math.max(0,Math.round((help-stepFor(Math.max(help-0.01,0)))*100)/100),last:last};
+    else ra={type:"hold",assist:true,w:help,last:last};
+    if(R.load<1){ra.type="deload";ra.w=roundW(help*(2-R.load));}
+    ra.R=R;return ra;
+  }
+  var top=mode==="bw"?0:Math.max.apply(null,ws.map(function(s){return s.w||0;}));
   var res;
   if(top<=0)res={type:allTop?"up":"hold",w:0,bw:true,last:last};
   else if(allTop)res={type:"up",w:Math.round((top+stepFor(top))*100)/100,last:last};
@@ -740,13 +780,15 @@ function setsText(entry){
   var mode=exMode(entry.exId);
   if(mode==="time")return ws.map(function(s){return s.r;}).join(", ")+" сек";
   if(mode==="bw")return ws.map(function(s){return s.r;}).join(", ")+" раз";
+  if(mode==="assist"){var same=ws.every(function(s){return s.w===ws[0].w;});return same?"помощь "+fmtNum(ws[0].w||0)+" кг × "+ws.map(function(s){return s.r;}).join(", "):"помощь "+ws.map(function(s){return fmtNum(s.w||0)+"×"+s.r;}).join(", ");}
   var sameW=ws.every(function(s){return s.w===ws[0].w;});
   if(sameW)return (ws[0].w?fmtNum(ws[0].w)+" кг × ":"")+ws.map(function(s){return s.r;}).join(", ");
   return ws.map(function(s){return (s.w?fmtNum(s.w)+"×":"")+s.r;}).join(", ");
 }
 function newEntry(gid,exId){
   var rec=recommend(exId,state.date);
-  var w=(exMode(exId)==="w"&&rec.w!==undefined&&rec.w>0)?rec.w:null;
+  var md=exMode(exId);
+  var w=((md==="w"&&rec.w>0)||(md==="assist"&&rec.w!==undefined))?rec.w:null;
   var sets=[];for(var i=0;i<rec.R.sets;i++)sets.push({w:w,r:null});
   return {gid:gid,exId:exId,sets:sets};
 }
@@ -759,6 +801,8 @@ function currentSlots(){
     if(!slots.some(function(s){return s.gid===en.gid;})&&group(en.gid))slots.push({gid:en.gid,count:1,extra:true});
   });
   slots.forEach(function(s){var n=state.draft.entries.filter(function(en){return en.gid===s.gid;}).length;if(n>s.count)s.count=n;});
+  var ord=state.draft.order;
+  if(ord&&ord.length){slots.forEach(function(s,i){s._i=i;});slots.sort(function(a,b){var ia=ord.indexOf(a.gid),ib=ord.indexOf(b.gid);if(ia<0)ia=999+a._i;if(ib<0)ib=999+b._i;return ia-ib;});}
   return slots;
 }
 /* Следующая тренировка по очереди: после последней сделанной программы */
@@ -951,6 +995,100 @@ var VOLUME = {
 /* Базовые упражнения частично нагружают соседние мышцы — считаем за ½ подхода */
 var INDIRECT = {back:["biceps"],chest:["triceps"],shoulders:["triceps"],quads:["glutes"],hams:["glutes"],glutes:["hams"]};
 
+/* ---------- каталог упражнений ----------
+   Строка: "название | тип | режим | флаги"
+   тип: h — тяжёлое, m — среднее, i — изоляция, c — пресс/икры/лёгкое
+   режим: w — с весом, b — без веса, t — на время, a — с помощью (противовес: меньше = лучше)
+   флаги: r — нагрузка на поясницу, d — можно дома */
+var CATALOG_GROUPS = [
+ {m:"quads",name:"Квадрицепс",list:[
+  "Приседания со штангой|h|w|r","Фронтальные приседания|h|w|r","Приседания в Смите|h|w|r","Гоблет-присед|m|w|rd","Приседания с гантелями|m|w|rd",
+  "Приседания без веса|m|b|d","Приседания с выпрыгиванием|m|b|d","Приседания с резинкой|m|b|d","Пистолетик (присед на одной ноге)|m|b|d","Сисси-присед|i|b|d",
+  "Жим ногами|h|w|","Жим ногами одной ногой|m|w|","Гакк-приседания|h|w|r","Обратный гакк|h|w|","Маятниковые приседания|h|w|",
+  "Разгибание ног|i|w|","Разгибание одной ноги|i|w|","Выпады вперёд с гантелями|m|w|d","Выпады назад с гантелями|m|w|d","Выпады в ходьбе|m|w|d",
+  "Выпады в Смите|m|w|","Выпады со штангой|m|w|r","Выпады на месте|m|b|d","Болгарские сплит-приседания|m|w|d","Сплит-присед|m|w|d",
+  "Зашагивания на платформу|m|w|d","Стульчик у стены|c|t|d"]},
+ {m:"glutes",name:"Ягодицы",list:[
+  "Хип-траст со штангой|h|w|","Хип-траст в тренажёре|h|w|","Хип-траст с гантелью|m|w|d","Хип-траст на одной ноге|i|b|d","Ягодичный мост|m|w|",
+  "Ягодичный мост со штангой|h|w|","Ягодичный мост лёжа на полу|m|b|d","Мост на одной ноге|i|b|d","Ягодичный мост с резинкой|m|b|d","Фрог-памп (мост «лягушка»)|i|b|d",
+  "Подъём таза в Смите|h|w|","Отведение ноги назад|i|w|","Отведение ноги назад в кроссовере|i|w|","Отведение ноги в тренажёре|i|w|","Отведение ноги на четвереньках|i|b|d",
+  "Отведение ноги на четвереньках с резинкой|i|b|d","Кикбек в Смите|i|w|","Гиперэкстензия|m|b|","Гиперэкстензия на ягодицы|m|b|","Обратная гиперэкстензия|m|w|r",
+  "Протяжка каната между ног|m|w|","Выпады в реверансе|m|w|d"]},
+ {m:"hams",name:"Задняя поверхность бедра",list:[
+  "Сгибание ног|i|w|","Сгибание ног лёжа|i|w|","Сгибание ног сидя|i|w|","Сгибание ноги стоя|i|w|","Сгибание ног с гантелью лёжа|i|w|d",
+  "Румынская тяга|h|w|r","Румынская тяга со штангой|h|w|r","Румынская тяга с гантелями|h|w|rd","Румынская тяга на одной ноге|m|w|d","Становая тяга|h|w|r",
+  "Становая на прямых ногах|h|w|r","Тяга сумо|h|w|r","Гуд морнинг|h|w|r","Нордические сгибания|m|b|d","Сгибание ног с пятками на полотенце|i|b|d",
+  "Сгибание ног на фитболе|i|b|d"]},
+ {m:"hips",name:"Внешняя и внутренняя часть бедра",list:[
+  "Отведение бёдер|i|w|","Сведение бёдер|i|w|","Отведение бёдер в тренажёре|i|w|","Сведение бёдер в тренажёре|i|w|","Отведение ноги в сторону в кроссовере|i|w|",
+  "Приведение ноги в кроссовере|i|w|","Отведение ноги лёжа на боку|i|b|d","Приведение ноги лёжа на боку|i|b|d","Шаги в сторону с резинкой|i|b|d","Раскрытие колен лёжа на боку (ракушка)|i|b|d",
+  "Плие-присед с гантелью|m|w|d","Копенгагенская планка|c|t|d"]},
+ {m:"back",name:"Спина",list:[
+  "Подтягивания|m|b|","Подтягивания обратным хватом|m|b|","Подтягивания в гравитроне|m|a|","Отжимания на брусьях в гравитроне|m|a|","Австралийские подтягивания|m|b|","Тяга верхнего блока|m|w|",
+  "Тяга верхнего блока широким хватом|m|w|","Тяга верхнего блока узким хватом|m|w|","Тяга верхнего блока обратным хватом|m|w|","Тяга верхнего блока одной рукой|m|w|","Тяга горизонтального блока|m|w|",
+  "Тяга горизонтального блока одной рукой|m|w|","Рычажная тяга|m|w|","Тяга Т-грифа|h|w|r","Тяга Т-грифа с упором грудью|h|w|","Тяга штанги в наклоне|h|w|r",
+  "Тяга штанги обратным хватом|h|w|r","Тяга Пендли|h|w|r","Тяга гантели одной рукой|m|w|d","Тяга гантелей лёжа на наклонной|m|w|d","Тяга гантелей в наклоне с упором|m|w|d",
+  "Тяга Мидоуз|m|w|","Пуловер на верхнем блоке|i|w|","Пуловер с гантелью|i|w|d","Шраги с гантелями|i|w|d","Шраги со штангой|i|w|",
+  "Гиперэкстензия на спину|m|b|","Супермен (лёжа на животе)|c|b|d","Тяга резинки к поясу|m|w|d"]},
+ {m:"chest",name:"Грудь",list:[
+  "Жим штанги лёжа|h|w|","Жим штанги на наклонной|h|w|","Жим штанги головой вниз|h|w|","Жим гантелей|m|w|","Жим гантелей на наклонной|m|w|",
+  "Жим гантелей головой вниз|m|w|","Жим в Смите|h|w|","Жим в Смите на наклонной|h|w|","Жим в тренажёре сидя|m|w|","Жим в рычажном тренажёре|m|w|",
+  "Бабочка|i|w|","Разводка гантелей|i|w|d","Разводка гантелей на наклонной|i|w|","Сведение в кроссовере|i|w|","Сведение в кроссовере снизу вверх|i|w|",
+  "Отжимания|m|b|d","Отжимания с колен|m|b|d","Отжимания с ногами на возвышении|m|b|d","Отжимания на брусьях|m|b|","Жим гантелей лёжа на полу|m|w|d",
+  "Свенд-пресс (сжимание блина)|i|w|d"]},
+ {m:"shoulders",name:"Плечи",list:[
+  "Армейский жим|h|w|r","Жим штанги сидя|h|w|","Жим гантелей сидя|m|w|d","Жим гантелей стоя|m|w|rd","Жим Арнольда|m|w|d",
+  "Жим в тренажёре на плечи|m|w|","Жим в Смите сидя|h|w|","Махи в стороны|i|w|d","Махи в стороны сидя|i|w|d","Махи в наклоне|i|w|d",
+  "Махи перед собой|i|w|d","Отведение на блоке|i|w|","Махи в тренажёре|i|w|","Обратная бабочка|i|w|","Тяга каната к лицу|i|w|",
+  "Тяга штанги к подбородку|m|w|","Тяга гантелей к подбородку|m|w|d","Разводка в кроссовере на заднюю дельту|i|w|","Отжимания уголком (пайк)|m|b|d","Тяга резинки к лицу|i|w|d",
+  "Y-подъёмы лёжа на наклонной|i|w|d"]},
+ {m:"biceps",name:"Бицепс",list:[
+  "Сгибания со штангой|i|w|","Сгибания с EZ-грифом|i|w|","Сгибания с гантелями стоя|i|w|d","Сгибания с гантелями сидя|i|w|d","Молотки|i|w|d",
+  "Концентрированные сгибания|i|w|d","Сгибания на скамье Скотта|i|w|","Сгибания на наклонной скамье|i|w|","Сгибания на нижнем блоке|i|w|","Сгибания на верхних блоках|i|w|",
+  "Сгибания в тренажёре|i|w|","Паучьи сгибания|i|w|","Сгибания Зоттмана|i|w|d","Сгибания с резинкой|i|w|d"]},
+ {m:"triceps",name:"Трицепс",list:[
+  "Разгибания на верхнем блоке|i|w|","Разгибания на блоке с канатом|i|w|","Разгибания одной рукой на блоке|i|w|","Французский жим со штангой|i|w|","Французский жим с гантелями|i|w|d",
+  "Разгибание гантели из-за головы|i|w|d","Разгибание из-за головы на блоке|i|w|","Жим узким хватом|m|w|","Отжимания узким хватом|m|b|d","Обратные отжимания от скамьи|m|b|d",
+  "Обратные отжимания от стула|m|b|d","Отжимания на брусьях на трицепс|m|b|","Кикбек с гантелью|i|w|d","Разгибания в тренажёре|i|w|"]},
+ {m:"calves",name:"Икры",list:[
+  "Подъёмы на носки стоя в тренажёре|c|w|","Подъёмы на носки сидя|c|w|","Подъёмы на носки в тренажёре|c|w|","Подъёмы на носки в жиме ногами|c|w|","Подъёмы на носки в Смите|c|w|r",
+  "Подъёмы на носки на одной ноге|c|b|d","Подъёмы на носки с гантелью|c|w|d","Ослиные подъёмы на носки|c|w|"]},
+ {m:"abs",name:"Пресс",list:[
+  "Планка|c|t|d","Боковая планка|c|t|d","Планка с касанием плеч|c|b|d","Холлоу-холд (лодочка)|c|t|d","Вакуум|c|t|d",
+  "Мёртвый жук|c|b|d","Птица-собака|c|b|d","Скручивания|c|b|d","Обратные скручивания|c|b|d","Скручивания на блоке (молитва)|c|w|",
+  "Скручивания на фитболе|c|b|d","Велосипед|c|b|d","Подъём коленей в упоре|c|b|","Подъём коленей в висе|c|b|","Подъём ног в висе|c|b|r",
+  "Подъём ног лёжа|c|b|rd","Ножницы|c|b|rd","Русские скручивания|c|w|rd","Паллоф-пресс|c|w|","Дровосек на блоке|c|w|",
+  "Ролик для пресса|c|b|rd","Альпинист (скалолаз)|c|b|d","Боковые наклоны с гантелью|c|w|d"]},
+ {m:null,name:"Предплечья и хват",list:[
+  "Сгибания запястий со штангой|i|w|","Сгибания запястий с гантелями|i|w|d","Разгибания запястий|i|w|d","Вис на турнике|c|t|","Прогулка фермера|m|t|"]},
+ {m:null,name:"Всё тело и кардио",list:[
+  "Бёрпи|m|b|d","Махи гирей|m|w|r","Трастеры с гантелями|h|w|d","Прыжки на тумбу|m|b|","Джампинг джек|c|b|d",
+  "Скакалка|c|t|d","Турецкий подъём|m|w|d","Гребной тренажёр|c|t|","Велотренажёр|c|t|","Беговая дорожка|c|t|"]}
+];
+var KIND_CODE={h:"heavy",m:"mid",i:"iso",c:"core"},MODE_CODE={w:"w",b:"bw",t:"time",a:"assist"};
+function catId(name){var h=0;for(var i=0;i<name.length;i++){h=(h*31+name.charCodeAt(i))|0;}return "k"+(h>>>0).toString(36);}
+var CATALOG=[];
+CATALOG_GROUPS.forEach(function(cg,gi){cg.list.forEach(function(line){
+  var p=line.split("|");var f=p[3]||"";
+  CATALOG.push({id:catId(p[0]),name:p[0],kind:KIND_CODE[p[1]]||"mid",mode:MODE_CODE[p[2]]||"w",muscle:cg.m,cat:gi,backRisk:f.indexOf("r")>=0,home:f.indexOf("d")>=0});
+});});
+function normName(s){return String(s).toLowerCase().replace(/ё/g,"е").replace(/[^a-zа-я0-9]+/g," ").trim();}
+function groupHasName(g,name){var n=normName(name);return g.ex.some(function(e){return !e.archived&&normName(e.name)===n;});}
+/* Добавить упражнение из каталога в группу; возвращает id упражнения в группе */
+function addFromCatalog(gid,cid){
+  var g=group(gid);var c=CATALOG.filter(function(x){return x.id===cid;})[0];if(!g||!c)return null;
+  var n=normName(c.name);
+  var ex=g.ex.filter(function(e){return normName(e.name)===n;})[0];
+  if(ex){ex.archived=false;return ex.id;}
+  var id=c.id;var taken=findEx(id);if(taken)id=uid("x");
+  var o={id:id,name:c.name,kind:c.kind};
+  if(c.mode!=="w")o.mode=c.mode;
+  if(c.backRisk)o.backRisk=true;
+  if(c.muscle!==g.muscle)o.muscle=c.muscle;
+  g.ex.push(o);
+  return o.id;
+}
+
 /* ---------- звук, вибрация, экран ---------- */
 var audioCtx=null;
 function unlockAudio(){try{if(!audioCtx){var AC=window.AudioContext||window.webkitAudioContext;if(AC)audioCtx=new AC();}if(audioCtx&&audioCtx.state==="suspended")audioCtx.resume();}catch(e){}}
@@ -1127,7 +1265,7 @@ function checkAchievements(silent){
 /* Цели: отмечаем достигнутые */
 function checkGoals(){
   Object.keys(state.config.goals).forEach(function(exId){
-    var g=state.config.goals[exId];if(g.doneAt)return;
+    var g=state.config.goals[exId];if(g.doneAt||exMode(exId)==="assist")return;
     var h=exHistory(exId);if(!h.length)return;
     var cur=h[h.length-1].top;
     if(cur>=g.w){g.doneAt=h[h.length-1].date;state.cfgDirty=true;toast('<span class="big">🎯</span><span><b>Цель достигнута!</b><br>'+esc(exName(exId))+' — '+fmtNum(g.w)+' кг</span>',"gold");confetti();}
@@ -1162,11 +1300,11 @@ function comparison(months){
     var base=null;for(var i=h.length-1;i>=0;i--){if(h[i].date<=cut){base=h[i];break;}}
     var since=false;if(!base){base=h[0];since=true;}
     var now=h[h.length-1];if(now.date===base.date)return;
-    var md=exMode(e.id);var bw=md!=="w"||h.every(function(p){return p.top<=0;});
+    var md=exMode(e.id);var bw=(md!=="w"&&md!=="assist")||(md==="w"&&h.every(function(p){return p.top<=0;}));
     var a=bw?base.reps:base.top,b=bw?now.reps:now.top;
-    rows.push({exId:e.id,from:a,to:b,unit:md==="time"?"сек":bw?"раз":"кг",diff:b-a,pct:a>0?Math.round((b-a)/a*100):0,since:since,fromDate:base.date});
+    rows.push({exId:e.id,from:a,to:b,unit:md==="time"?"сек":md==="assist"?"кг помощи":bw?"раз":"кг",inv:md==="assist",diff:b-a,pct:a>0?Math.round((b-a)/a*100):0,since:since,fromDate:base.date});
   });});
-  rows.sort(function(x,y){return y.pct-x.pct||y.diff-x.diff;});
+  rows.sort(function(x,y){var px=x.inv?-x.pct:x.pct,py=y.inv?-y.pct:y.pct;return py-px;});
   return rows;
 }
 
@@ -1510,14 +1648,15 @@ function modePicker(exId){
 function recHtml(exId){
   var r=recommend(exId,state.date),R=r.R,mode=exMode(exId);
   if(r.type==="new"){
-    var t=mode==="time"?"Первый раз — держи сколько сможешь и запиши секунды":mode==="bw"?"Первый раз — сделай сколько сможешь, оставив 1–2 повтора в запасе":"Первый раз — подбери вес на "+R.lo+"–"+R.hi+" повторов";
+    var t=mode==="assist"?"Первый раз — подбери противовес, чтобы сделать "+R.lo+"–"+R.hi+" повторов. Чем меньше помощь, тем ты сильнее":mode==="time"?"Первый раз — держи сколько сможешь и запиши секунды":mode==="bw"?"Первый раз — сделай сколько сможешь, оставив 1–2 повтора в запасе":"Первый раз — подбери вес на "+R.lo+"–"+R.hi+" повторов";
     return '<div class="rec new"><div class="goal">'+t+'</div></div>';
   }
   if(r.time)return '<div class="rec up"><div class="last">Прошлый раз, '+fmtDate(r.last.date)+': <span>'+esc(setsText(r.last.entry))+'</span></div><div class="goal">Сегодня: попробуй <span>'+r.target+' сек</span></div></div>';
   var last='<div class="last">Прошлый раз, '+fmtDate(r.last.date)+': <span>'+esc(setsText(r.last.entry))+'</span></div>';
   var rng=R.lo===R.hi?R.lo:R.lo+'–'+R.hi;
   var goal;
-  if(r.type==="deload")goal='Разгрузка: <span>'+fmtNum(r.w)+' кг</span> × '+rng+', спокойно';
+  if(r.assist)goal=r.type==="deload"?'Разгрузка: помощь <span>'+fmtNum(r.w)+' кг</span>, спокойно':r.type==="up"?'Сегодня: помощь <span>'+fmtNum(r.w)+' кг</span> ↓ меньше помощи':'Сегодня: помощь <span>'+fmtNum(r.w)+' кг</span>, добей до '+R.hi+' во всех подходах';
+  else if(r.type==="deload")goal='Разгрузка: <span>'+fmtNum(r.w)+' кг</span> × '+rng+', спокойно';
   else if(r.bw)goal=r.type==="up"?(mode==="bw"?"Сегодня: добавь 1–2 повтора":"Сегодня: добавь 2–3 повтора или вес"):"Сегодня: постарайся сделать на повтор больше";
   else if(r.type==="up")goal='Сегодня: <span>'+fmtNum(r.w)+' кг</span> × '+rng+' ↑ прибавка';
   else goal='Сегодня: <span>'+fmtNum(r.w)+' кг</span>, добей до '+R.hi+' во всех подходах';
@@ -1533,12 +1672,12 @@ function loggerHtml(gid,en,showName,groupExIds){
   var rows=en.sets.map(function(s,i){
     var a='data-g="'+gid+'" data-e="'+en.exId+'" data-i="'+i+'"';
     var logged=s.r>0;
-    if(mode!=="w")return '<div class="set nw'+(logged?' logged':'')+'"><span class="n">'+(i+1)+'</span>'+
+    if(mode!=="w"&&mode!=="assist")return '<div class="set nw'+(logged?' logged':'')+'"><span class="n">'+(i+1)+'</span>'+
       '<div class="fld"><input id="r-'+en.exId+'-'+i+'" inputmode="numeric" enterkeyhint="done" autocomplete="off" '+a+' data-f="r" value="'+(s.r||"")+'" placeholder="'+(mode==="time"?"секунды":(R.lo===R.hi?R.lo:R.lo+'–'+R.hi))+'" aria-label="'+(mode==="time"?"Секунды":"Повторы")+'"><small>'+(mode==="time"?"сек":"раз")+'</small></div>'+
       '<button class="del" data-act="delset" '+a+' aria-label="Убрать подход">×</button></div>';
-    return '<div class="set'+(logged?' logged':'')+'"><span class="n">'+(i+1)+'</span>'+
+    return '<div class="set'+(logged?' logged':'')+(mode==="assist"?' assist':'')+'"><span class="n">'+(i+1)+'</span>'+
       '<div class="wfld"><button class="pm" data-act="wminus" '+a+' aria-label="Меньше вес">−</button>'+
-      '<div class="fld"><input id="w-'+en.exId+'-'+i+'" inputmode="decimal" autocomplete="off" '+a+' data-f="w" value="'+fmtNum(s.w)+'" placeholder="0" aria-label="Вес, кг"></div>'+
+      '<div class="fld"><input id="w-'+en.exId+'-'+i+'" inputmode="decimal" autocomplete="off" '+a+' data-f="w" value="'+fmtNum(s.w)+'" placeholder="'+(mode==="assist"?'помощь':'0')+'" aria-label="'+(mode==="assist"?'Противовес, кг':'Вес, кг')+'"></div>'+
       '<button class="pm" data-act="wplus" '+a+' aria-label="Больше вес">+</button></div>'+
       '<span class="x">×</span>'+
       '<div class="fld"><input id="r-'+en.exId+'-'+i+'" inputmode="numeric" enterkeyhint="done" autocomplete="off" '+a+' data-f="r" value="'+(s.r||"")+'" placeholder="'+(R.lo===R.hi?R.lo:R.lo+'–'+R.hi)+'" aria-label="Повторы"></div>'+
@@ -1560,10 +1699,30 @@ function loggerHtml(gid,en,showName,groupExIds){
   var head='<div class="lhead">'+((showName||foreign)?'<h3>'+esc(exName(en.exId))+'</h3>':'<span class="sp"></span>')+modeChip(en.exId)+kindChip(en.exId)+
     (f&&f.e.backRisk?'<span class="risk" title="Нагрузка на поясницу">⚠️</span>':'')+
     '<span class="ltools"><button class="tool" data-act="swap" data-g="'+gid+'" data-e="'+en.exId+'" title="Тренажёр занят">⇄ Занято</button>'+
-    (partner?'':'<button class="tool'+(state.ssPick===entryKey(en)?' on':'')+'" data-act="sspick" data-g="'+gid+'" data-e="'+en.exId+'" title="Суперсет">🔗</button>')+'</span></div>';
+    (partner?'':'<button class="tool'+(state.ssPick===entryKey(en)?' on':'')+'" data-act="sspick" data-g="'+gid+'" data-e="'+en.exId+'" title="Суперсет">🔗</button>')+
+    '<button class="tool" data-act="collapse" data-g="'+gid+'" data-e="'+en.exId+'" aria-label="Свернуть подходы" title="Свернуть">▴</button></span></div>';
   head+=modePicker(en.exId);
   return '<div class="log'+(partner?' inss':'')+'" data-entry="'+esc(entryKey(en))+'">'+head+swapHtml+ssHtml+noteHtml+recHtml(en.exId)+
     '<div class="sets">'+rows+'</div><button class="addset" data-act="addset" data-g="'+gid+'" data-e="'+en.exId+'">+ подход</button></div>';
+}
+function collapsedHtml(gid,en){
+  var txt=entryDone(en)?setsText(en):en.sets.length+" "+plural(en.sets.length,"подход","подхода","подходов")+" · ещё не начато";
+  var all=en.sets.length&&en.sets.every(function(s){return s.r>0;});
+  return '<button class="logc'+(all?' full':'')+'" data-act="expand" data-g="'+gid+'" data-e="'+en.exId+'" aria-label="Развернуть подходы"><span class="lcn">'+(all?'✓ ':'')+esc(exName(en.exId))+'</span><span class="lcs">'+esc(txt)+'</span><span class="lcv">▾</span></button>';
+}
+function reorderHtml(slots){
+  var h='<div class="card reord"><div class="hrow"><b>Порядок упражнений</b><button class="btn primary" data-act="orddone">Готово</button></div><p class="hint left">Стрелками меняй местами группы и упражнения в сегодняшней тренировке.</p>';
+  slots.forEach(function(s,i){
+    var g=group(s.gid);var ents=state.draft.entries.filter(function(en){return en.gid===s.gid;});
+    h+='<div class="orow"><span class="oname">'+esc(g.name)+(ents.length===1?'<small>'+esc(exName(ents[0].exId))+'</small>':'')+'</span>'+
+      '<span class="mv"><button data-act="ordmv" data-g="'+s.gid+'" data-d="-1" aria-label="Выше"'+(i===0?' disabled':'')+'>↑</button><button data-act="ordmv" data-g="'+s.gid+'" data-d="1" aria-label="Ниже"'+(i===slots.length-1?' disabled':'')+'>↓</button></span></div>';
+    if(ents.length>1)ents.forEach(function(en,k){
+      h+='<div class="orow sub"><span class="oname">'+esc(exName(en.exId))+'</span><span class="mv"><button data-act="entmv" data-g="'+s.gid+'" data-e="'+en.exId+'" data-d="-1" aria-label="Выше"'+(k===0?' disabled':'')+'>↑</button><button data-act="entmv" data-g="'+s.gid+'" data-e="'+en.exId+'" data-d="1" aria-label="Ниже"'+(k===ents.length-1?' disabled':'')+'>↓</button></span></div>';
+    });
+  });
+  var p=program(state.draft.programId);
+  if(p)h+='<button class="btn" data-act="ordsave">Сохранить этот порядок в программе «'+esc(p.name)+'»</button>';
+  return h+'</div>';
 }
 function swapOptions(en){
   var used={};state.draft.entries.forEach(function(x){used[x.exId]=true;});
@@ -1621,6 +1780,11 @@ function renderWorkout(){
   if(canFill)h+='<button class="btn fill" data-act="fill">★ Заполнить по программе</button>';
   if(state.ssPick)h+='<div class="banner ss">Выбери второе упражнение для суперсета и нажми «Связать». <button class="linkbtn" data-act="sscancel">отмена</button></div>';
   if(!slots.length)h+='<div class="empty">В этой тренировке пока нет групп мышц.<br>Добавь их в «Настройки» → «Мои тренировки».</div>';
+  if(slots.length){
+    var anyEnt=state.draft.entries.length>0;var allC=anyEnt&&state.draft.entries.every(function(en){return en.collapsed;});
+    h+='<div class="wtools"><button class="tool'+(state.reorder?' on':'')+'" data-act="reorder">⇅ Порядок</button>'+(anyEnt?'<button class="tool" data-act="'+(allC?'expandall':'collapseall')+'">'+(allC?'▾ Развернуть всё':'▴ Свернуть всё')+'</button>':'')+'</div>';
+  }
+  if(state.reorder){view.innerHTML=h+reorderHtml(slots);return;}
   slots.forEach(function(s,si){
     var g=group(s.gid);
     var entries=state.draft.entries.filter(function(en){return en.gid===s.gid;});
@@ -1631,9 +1795,10 @@ function renderWorkout(){
       return '<button class="chip'+(on?' on':'')+(star?' pref':'')+'" data-act="pick" data-g="'+g.id+'" data-e="'+id+'" data-c="'+s.count+'" aria-pressed="'+on+'">'+(star?'★ ':'')+esc(exName(id))+'</button>';
     }).join("");
     var tag=groupDone(s.gid)?'<span class="check">✓</span>':(s.count>1?'<span class="tag">до '+s.count+' упр.</span>':(s.extra?'<span class="tag">вне плана</span>':''));
-    h+='<section class="group'+(groupDone(s.gid)?' done':'')+'" data-group="'+g.id+'"><div class="ghead">'+plate(si)+'<h2>'+esc(g.name)+'</h2>'+tag+'</div>'+
-      '<div class="chips">'+(chips||'<span class="hint">Нет упражнений — добавь в «Настройках»</span>')+'</div>'+
-      entries.map(function(en){return loggerHtml(g.id,en,s.count>1,exIds);}).join("")+'</section>';
+    var compact=entries.length&&entries.every(function(en){return en.collapsed;});
+    h+='<section class="group'+(groupDone(s.gid)?' done':'')+(compact?' compact':'')+'" data-group="'+g.id+'"><div class="ghead">'+plate(si)+'<h2>'+esc(g.name)+'</h2>'+tag+'</div>'+
+      (compact?'':'<div class="chips">'+chips+'<button class="chip more" data-act="catalog" data-g="'+g.id+'" data-c="'+s.count+'">+ ещё упражнения</button></div>')+
+      entries.map(function(en){return en.collapsed?collapsedHtml(g.id,en):loggerHtml(g.id,en,s.count>1,exIds);}).join("")+'</section>';
   });
   if(state.draft.entries.some(entryDone)&&!state.draft.finishedAt&&state.date===todayIso())h+='<button class="btn primary wide" data-act="finish">Завершить тренировку</button>';
   h+='<p class="hint">Вес подставляется по прошлой тренировке — впиши повторы, и запустится отдых.</p>';
@@ -1715,7 +1880,7 @@ function chartSvg(pts,useReps,goalW){
   return s+'</svg>';
 }
 function goalCardHtml(exId,hist,useReps){
-  if(useReps)return "";
+  if(useReps||exMode(exId)==="assist")return "";
   var g=state.config.goals[exId];var cur=hist[hist.length-1].top;
   if(!g||state.editGoal===exId){
     return '<div class="card goal"><b>🎯 Цель</b><form class="goalform" data-form="goal" data-e="'+exId+'"><label>Вес, кг<input id="goalW" inputmode="decimal" value="'+(g?fmtNum(g.w):fmtNum(roundW(cur*1.2)))+'"></label><label>К дате (необязательно)<input id="goalD" type="date" value="'+(g&&g.by?g.by:'')+'"></label><button class="btn primary" type="submit">Сохранить</button></form>'+(g?'<button class="linkbtn" data-act="goaldel" data-e="'+exId+'">удалить цель</button>':'')+'</div>';
@@ -1747,24 +1912,26 @@ function renderProgress(){
     return o?'<optgroup label="'+esc(g.name)+'">'+o+'</optgroup>':'';
   }).join("");
   var hist=exHistory(state.progEx);
-  var exm=exMode(state.progEx);
-  var useReps=exm!=="w"||hist.every(function(p){return p.top<=0;});
-  var best=hist.reduce(function(b,p){var v=useReps?p.reps:p.top,bv=useReps?b.reps:b.top;return v>bv||(v===bv&&p.reps>b.reps)?p:b;},hist[0]);
+  var exm=exMode(state.progEx);var inv=exm==="assist";
+  var useReps=(exm!=="w"&&!inv)||(exm==="w"&&hist.every(function(p){return p.top<=0;}));
+  var best=hist.reduce(function(b,p){var v=useReps?p.reps:p.top,bv=useReps?b.reps:b.top;if(inv)return v<bv||(v===bv&&p.reps>b.reps)?p:b;return v>bv||(v===bv&&p.reps>b.reps)?p:b;},hist[0]);
   var first=hist[0],last=hist[hist.length-1];
   var diff=useReps?last.reps-first.reps:Math.round((last.top-first.top)*100)/100;
   var unit=exm==="time"?" сек":useReps?" раз":" кг";
+  if(inv)diff=Math.round((first.top-last.top)*100)/100;
   var g=state.config.goals[state.progEx];
   h+='<div class="sec-title">Упражнение</div><select class="sel" id="progSel" aria-label="Упражнение">'+opts+'</select>'+
     '<div class="stats"><div class="stat"><small>Тренировок</small><b>'+hist.length+'</b></div>'+
-    '<div class="stat"><small>Рекорд</small><b>'+(useReps?best.reps+unit:fmtNum(best.top)+'×'+best.reps)+'</b></div>'+
-    '<div class="stat"><small>Прирост</small><b>'+(diff>0?'+':'')+fmtNum(diff)+unit+'</b></div></div>'+
+    '<div class="stat"><small>'+(inv?'Рекорд, помощь':'Рекорд')+'</small><b>'+(useReps?best.reps+unit:fmtNum(best.top)+'×'+best.reps)+'</b></div>'+
+    '<div class="stat"><small>'+(inv?'Меньше помощи':'Прирост')+'</small><b>'+(diff>0?'+':'')+fmtNum(diff)+unit+'</b></div></div>'+
     '<div class="chart">'+chartSvg(hist,useReps,g&&g.w)+'</div>'+goalCardHtml(state.progEx,hist,useReps)+
     '<details class="card plainlist"><summary>Все тренировки с этим упражнением ('+hist.length+')</summary><div class="lines">'+
     hist.slice().reverse().map(function(p){return '<div><span>'+fmtDate(p.date,true)+'</span><span>'+esc(setsText(p.entry))+'</span></div>';}).join("")+'</div></details>';
   var rows=comparison(state.cmpMonths);
   h+='<div class="sec-title">Было → стало</div><div class="card"><div class="seg">'+[[1,"Месяц"],[3,"3 месяца"],[6,"Полгода"]].map(function(o){return '<button class="'+(state.cmpMonths===o[0]?'on':'')+'" data-act="cmp" data-m="'+o[0]+'">'+o[1]+'</button>';}).join("")+'</div>'+
     (rows.length?'<div class="cmp">'+rows.map(function(r){var up=r.diff>0,dn=r.diff<0;
-      return '<div class="crow"><span class="cname">'+esc(exName(r.exId))+(r.since?'<small>с '+fmtDate(r.fromDate)+'</small>':'')+'</span><span class="cval">'+fmtNum(r.from)+' → <b>'+fmtNum(r.to)+'</b> '+r.unit+'</span><span class="cdiff '+(up?'up':dn?'down':'')+'">'+(up?'+':'')+fmtNum(r.diff)+(r.pct?' ('+(up?'+':'')+r.pct+'%)':'')+'</span></div>';}).join("")+'</div>':'<p class="hint left">Сравнение появится, когда по упражнению будет хотя бы две тренировки.</p>')+'</div>';
+      if(r.inv){up=r.diff<0;dn=r.diff>0;}
+      return '<div class="crow"><span class="cname">'+esc(exName(r.exId))+(r.since?'<small>с '+fmtDate(r.fromDate)+'</small>':'')+'</span><span class="cval">'+fmtNum(r.from)+' → <b>'+fmtNum(r.to)+'</b> '+r.unit+'</span><span class="cdiff '+(up?'up':dn?'down':'')+'">'+(r.diff>0?'+':'')+fmtNum(r.diff)+(r.pct?' ('+(r.pct>0?'+':'')+r.pct+'%)':'')+'</span></div>';}).join("")+'</div>':'<p class="hint left">Сравнение появится, когда по упражнению будет хотя бы две тренировки.</p>')+'</div>';
   h+=achHtml();
   view.innerHTML=h;
 }
@@ -1823,7 +1990,8 @@ function renderSettings(){
       '<div class="gbody"><div class="hrow"><input class="nameinp" id="gn-'+g.id+'" data-ren="g" data-id="'+g.id+'" value="'+esc(g.name)+'" aria-label="Название группы">'+confirmBtns("g",g.id,"Удалить группу")+'</div>'+
       '<label class="mline">На карте мышц<select class="sel small" id="gm-'+g.id+'" data-gmuscle="'+g.id+'">'+mopts+'</select></label>'+
       '<div>'+(rows||'<div class="hint">Пока пусто</div>')+'</div>'+
-      '<form class="addrow" data-form="ex" data-g="'+g.id+'"><input id="add-'+g.id+'" placeholder="Новое упражнение" aria-label="Новое упражнение"><button class="btn primary" type="submit">Добавить</button></form></div></details>';
+      '<button class="btn" data-act="catalog" data-g="'+g.id+'" data-ctx="settings">📖 Добавить из каталога</button>'+
+      '<form class="addrow" data-form="ex" data-g="'+g.id+'"><input id="add-'+g.id+'" placeholder="Или впиши своё упражнение" aria-label="Новое упражнение"><button class="btn primary" type="submit">Добавить</button></form></div></details>';
   });
   h+='<form class="addrow" data-form="group"><input id="newGroup" placeholder="Новая группа мышц" aria-label="Новая группа мышц"><button class="btn primary" type="submit">Создать</button></form>';
 
@@ -1852,7 +2020,7 @@ function renderSettings(){
 }
 
 /* ---------- окна ---------- */
-function openModal(m){state.modal=m;renderModal();}
+function openModal(m){state.modal=m;renderModal();if(m.type==="catalog")applyCatFilter();}
 function closeModal(){state.modal=null;renderModal();}
 function renderModal(){
   var el=document.getElementById("modal");var m=state.modal;
@@ -1874,6 +2042,22 @@ function renderModal(){
       '<div class="seg"><button class="'+(state.cardFormat!=="story"?'on':'')+'" data-act="cardfmt" data-f="post">Пост 4:5</button><button class="'+(state.cardFormat==="story"?'on':'')+'" data-act="cardfmt" data-f="story">Сторис 9:16</button></div>'+
       '<div class="cardprev'+(state.cardFormat==="story"?' story':'')+'">'+(m.url?'<img src="'+m.url+'" alt="Карточка тренировки">':'<div class="hint">Рисую…</div>')+'</div>'+
       '<div class="btns"><button class="btn primary" data-act="cardshare"'+(m.url?'':' disabled')+'>'+(IS_ARTIFACT?'Скачать картинку':'Поделиться')+'</button><button class="btn" data-act="cardre">🎲 Другой вариант</button></div><span class="msg" id="cardMsg"></span>';
+  }else if(m.type==="catalog"){
+    var cg=group(m.gid);var gm=cg&&cg.muscle;
+    var items=CATALOG.filter(function(c){return state.catAll||!gm||c.muscle===gm;});
+    var cats={};items.forEach(function(c){(cats[c.cat]=cats[c.cat]||[]).push(c);});
+    inner='<div class="mhead"><h2>Каталог упражнений</h2><button class="x" data-act="mclose" aria-label="Закрыть">×</button></div>'+
+      '<p class="msub">Добавить в группу «'+esc(cg?cg.name:"")+'». Всего в каталоге '+CATALOG.length+' упражнений.</p>'+
+      '<input class="catsearch" id="catSearch" type="search" placeholder="Поиск: жим, присед, планка…" autocomplete="off" value="'+esc(state.catQuery||"")+'">'+
+      '<div class="chips"><button class="chip'+(state.catAll?' on':'')+'" data-act="catall">Все группы мышц</button><button class="chip'+(state.catHome?' on':'')+'" data-act="cathome">🏠 Можно дома</button></div>'+
+      '<div class="catlist" id="catList">'+Object.keys(cats).map(function(ci){
+        return '<div class="catsec"><div class="catttl">'+esc(CATALOG_GROUPS[ci].name)+'</div>'+cats[ci].map(function(c){
+          var has=cg&&groupHasName(cg,c.name);
+          var badges=(c.mode!=="w"?'<span class="cb">'+MODES[c.mode].short+'</span>':'')+(c.home?'<span class="cb">🏠</span>':'')+(c.backRisk?'<span class="cb" title="Нагрузка на поясницу">⚠️</span>':'');
+          return '<div class="citem" data-n="'+esc(normName(c.name))+'" data-home="'+(c.home?1:0)+'"><span class="cname2">'+esc(c.name)+badges+'</span>'+
+            (has?'<span class="chas">✓ есть</span>':'<button class="btn small" data-act="catadd" data-c="'+c.id+'">Добавить</button>')+'</div>';
+        }).join("")+'</div>';
+      }).join("")+'</div><p class="hint" id="catEmpty" hidden>Ничего не нашлось. Можно вписать своё упражнение в «Настройках».</p>';
   }else if(m.type==="library"){
     var lt=state.libTab;
     inner='<div class="mhead"><h2>Готовые программы</h2><button class="x" data-act="mclose" aria-label="Закрыть">×</button></div>'+
@@ -1891,6 +2075,13 @@ function renderModal(){
   }
   el.innerHTML='<div class="mback" data-act="mclose"></div><div class="mbox" role="dialog" aria-modal="true">'+inner+'</div>';
 }
+function applyCatFilter(){
+  var q=normName(state.catQuery||"");var list=document.getElementById("catList");if(!list)return;var shown=0;
+  list.querySelectorAll(".citem").forEach(function(it){var ok=(!q||it.dataset.n.indexOf(q)>=0)&&(!state.catHome||it.dataset.home==="1");it.hidden=!ok;if(ok)shown++;});
+  list.querySelectorAll(".catsec").forEach(function(sec){sec.hidden=!sec.querySelector(".citem:not([hidden])");});
+  var em=document.getElementById("catEmpty");if(em)em.hidden=shown>0;
+}
+document.getElementById("modal").addEventListener("input",function(e){if(e.target.id==="catSearch"){state.catQuery=e.target.value;applyCatFilter();}});
 function openCard(date,keepSeed){
   var w=date===state.date?state.draft:state.workouts[date];if(!w)return;
   if(!keepSeed)state.cardSeed=Math.floor(Math.random()*1e9);
@@ -1990,6 +2181,36 @@ document.addEventListener("click",function(e){
     state.editNote=exId;rerender(renderWorkout);
     var ni=document.getElementById("note-"+exId);if(ni){ni.focus();ni.select();}break;
   case "noteok":{var inp2=document.querySelector("[data-note]");if(inp2)saveNote(inp2.dataset.note,inp2.value);break;}
+  case "collapse":case "expand":{var ec=findEntry(gid,exId);if(!ec)return;ec.collapsed=act==="collapse";touch();rerender(renderWorkout);break;}
+  case "collapseall":case "expandall":state.draft.entries.forEach(function(en){en.collapsed=act==="collapseall";});touch();rerender(renderWorkout);break;
+  case "reorder":state.reorder=!state.reorder;rerender(renderWorkout);break;
+  case "orddone":state.reorder=false;rerender(renderWorkout);break;
+  case "ordmv":{
+    var sl=currentSlots().map(function(x){return x.gid;});var oi=sl.indexOf(gid),oj=oi+(+b.dataset.d);if(oi<0||oj<0||oj>=sl.length)return;
+    var tmp=sl[oi];sl[oi]=sl[oj];sl[oj]=tmp;state.draft.order=sl;if(state.draft.entries.length)touch();rerender(renderWorkout);break;}
+  case "entmv":{
+    var all=state.draft.entries;var idxs=[];all.forEach(function(en,k){if(en.gid===gid)idxs.push(k);});
+    var pos=-1;idxs.forEach(function(k,q){if(all[k].exId===exId)pos=q;});var q2=pos+(+b.dataset.d);if(pos<0||q2<0||q2>=idxs.length)return;
+    var a1=idxs[pos],a2=idxs[q2];var t1=all[a1];all[a1]=all[a2];all[a2]=t1;touch();rerender(renderWorkout);break;}
+  case "ordsave":{
+    var pr2=program(state.draft.programId);if(!pr2)return;var ordr=currentSlots().map(function(x){return x.gid;});
+    pr2.slots.sort(function(x,y){return ordr.indexOf(x.gid)-ordr.indexOf(y.gid);});store.saveConfig();toast("Порядок сохранён в программе «"+esc(pr2.name)+"»");break;}
+  case "catalog":state.catQuery="";state.catAll=false;state.catHome=false;openModal({type:"catalog",gid:gid,count:+b.dataset.c||0,ctx:b.dataset.ctx||"workout"});break;
+  case "catall":state.catAll=!state.catAll;renderModal();applyCatFilter();break;
+  case "cathome":state.catHome=!state.catHome;renderModal();applyCatFilter();break;
+  case "catadd":{
+    var mm=state.modal;if(!mm)return;var newId=addFromCatalog(mm.gid,b.dataset.c);if(!newId)return;
+    store.saveConfig();
+    if(mm.ctx==="workout"){
+      var cnt=mm.count||1;var inG=state.draft.entries.filter(function(en){return en.gid===mm.gid;});
+      if(!inG.some(function(en){return en.exId===newId;})){
+        if(cnt<=1){state.draft.entries=state.draft.entries.filter(function(en){return en.gid!==mm.gid||entryDone(en);});state.draft.entries.push(newEntry(mm.gid,newId));}
+        else if(inG.length<cnt)state.draft.entries.push(newEntry(mm.gid,newId));
+        touch();
+      }
+      closeModal();rerender(renderWorkout);toast("«"+esc(exName(newId))+"» добавлено в группу");
+    }else{renderModal();applyCatFilter();refreshCurrent();}
+    break;}
   case "mode":state.modePick=state.modePick===exId?null:exId;refreshCurrent();break;
   case "modeset":{
     var fm=findEx(exId);if(!fm)return;fm.e.mode=b.dataset.m;state.modePick=null;
@@ -2105,8 +2326,8 @@ function onSetLogged(en,i){
   /* рекорд */
   var prev=bestBefore(en.exId,w.date);
   w.prs=w.prs||{};
-  var cand={w:s.w||0,r:s.r};var bar=w.prs[en.exId]&&better(w.prs[en.exId],prev)?w.prs[en.exId]:prev;
-  if(prev&&better(cand,bar)&&(cand.w!==bar.w||cand.r!==bar.r)){
+  var cand={w:s.w||0,r:s.r};var bar=w.prs[en.exId]&&betterEx(en.exId,w.prs[en.exId],prev)?w.prs[en.exId]:prev;
+  if(prev&&betterEx(en.exId,cand,bar)&&(cand.w!==bar.w||cand.r!==bar.r)){
     w.prs[en.exId]=cand;confetti();buzz([60,40,60]);
     toast('<span class="big">🏆</span><span><b>Новый рекорд!</b><br>'+esc(exName(en.exId))+' — '+fmtSet(en.exId,cand.w,cand.r)+'</span>',"gold");
   }
@@ -2140,7 +2361,9 @@ view.addEventListener("change",function(e){
   if(t.dataset&&t.dataset.f==="r"){
     var en=findEntry(t.dataset.g,t.dataset.e);if(!en)return;var i=+t.dataset.i;
     var row=t.closest(".set");if(row)row.classList.toggle("logged",en.sets[i].r>0);
-    if(en.sets[i].r>0){onSetLogged(en,i);touch();ensureSessBar();}
+    if(en.sets[i].r>0){onSetLogged(en,i);touch();ensureSessBar();
+      if(en.sets.every(function(x){return x.r>0;})&&!en.collapsed){en.collapsed=true;setTimeout(function(){var ae=document.activeElement;if(!(ae&&ae.tagName==="INPUT"&&view.contains(ae)))rerender(renderWorkout);},250);}
+    }
     return;
   }
   if(t.dataset&&t.dataset.note){saveNote(t.dataset.note,t.value);return;}

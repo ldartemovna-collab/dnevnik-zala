@@ -174,7 +174,7 @@ function checkAchievements(silent){
 /* Цели: отмечаем достигнутые */
 function checkGoals(){
   Object.keys(state.config.goals).forEach(function(exId){
-    var g=state.config.goals[exId];if(g.doneAt)return;
+    var g=state.config.goals[exId];if(g.doneAt||exMode(exId)==="assist")return;
     var h=exHistory(exId);if(!h.length)return;
     var cur=h[h.length-1].top;
     if(cur>=g.w){g.doneAt=h[h.length-1].date;state.cfgDirty=true;toast('<span class="big">🎯</span><span><b>Цель достигнута!</b><br>'+esc(exName(exId))+' — '+fmtNum(g.w)+' кг</span>',"gold");confetti();}
@@ -209,11 +209,11 @@ function comparison(months){
     var base=null;for(var i=h.length-1;i>=0;i--){if(h[i].date<=cut){base=h[i];break;}}
     var since=false;if(!base){base=h[0];since=true;}
     var now=h[h.length-1];if(now.date===base.date)return;
-    var md=exMode(e.id);var bw=md!=="w"||h.every(function(p){return p.top<=0;});
+    var md=exMode(e.id);var bw=(md!=="w"&&md!=="assist")||(md==="w"&&h.every(function(p){return p.top<=0;}));
     var a=bw?base.reps:base.top,b=bw?now.reps:now.top;
-    rows.push({exId:e.id,from:a,to:b,unit:md==="time"?"сек":bw?"раз":"кг",diff:b-a,pct:a>0?Math.round((b-a)/a*100):0,since:since,fromDate:base.date});
+    rows.push({exId:e.id,from:a,to:b,unit:md==="time"?"сек":md==="assist"?"кг помощи":bw?"раз":"кг",inv:md==="assist",diff:b-a,pct:a>0?Math.round((b-a)/a*100):0,since:since,fromDate:base.date});
   });});
-  rows.sort(function(x,y){return y.pct-x.pct||y.diff-x.diff;});
+  rows.sort(function(x,y){var px=x.inv?-x.pct:x.pct,py=y.inv?-y.pct:y.pct;return py-px;});
   return rows;
 }
 

@@ -51,14 +51,15 @@ function modePicker(exId){
 function recHtml(exId){
   var r=recommend(exId,state.date),R=r.R,mode=exMode(exId);
   if(r.type==="new"){
-    var t=mode==="time"?"Первый раз — держи сколько сможешь и запиши секунды":mode==="bw"?"Первый раз — сделай сколько сможешь, оставив 1–2 повтора в запасе":"Первый раз — подбери вес на "+R.lo+"–"+R.hi+" повторов";
+    var t=mode==="assist"?"Первый раз — подбери противовес, чтобы сделать "+R.lo+"–"+R.hi+" повторов. Чем меньше помощь, тем ты сильнее":mode==="time"?"Первый раз — держи сколько сможешь и запиши секунды":mode==="bw"?"Первый раз — сделай сколько сможешь, оставив 1–2 повтора в запасе":"Первый раз — подбери вес на "+R.lo+"–"+R.hi+" повторов";
     return '<div class="rec new"><div class="goal">'+t+'</div></div>';
   }
   if(r.time)return '<div class="rec up"><div class="last">Прошлый раз, '+fmtDate(r.last.date)+': <span>'+esc(setsText(r.last.entry))+'</span></div><div class="goal">Сегодня: попробуй <span>'+r.target+' сек</span></div></div>';
   var last='<div class="last">Прошлый раз, '+fmtDate(r.last.date)+': <span>'+esc(setsText(r.last.entry))+'</span></div>';
   var rng=R.lo===R.hi?R.lo:R.lo+'–'+R.hi;
   var goal;
-  if(r.type==="deload")goal='Разгрузка: <span>'+fmtNum(r.w)+' кг</span> × '+rng+', спокойно';
+  if(r.assist)goal=r.type==="deload"?'Разгрузка: помощь <span>'+fmtNum(r.w)+' кг</span>, спокойно':r.type==="up"?'Сегодня: помощь <span>'+fmtNum(r.w)+' кг</span> ↓ меньше помощи':'Сегодня: помощь <span>'+fmtNum(r.w)+' кг</span>, добей до '+R.hi+' во всех подходах';
+  else if(r.type==="deload")goal='Разгрузка: <span>'+fmtNum(r.w)+' кг</span> × '+rng+', спокойно';
   else if(r.bw)goal=r.type==="up"?(mode==="bw"?"Сегодня: добавь 1–2 повтора":"Сегодня: добавь 2–3 повтора или вес"):"Сегодня: постарайся сделать на повтор больше";
   else if(r.type==="up")goal='Сегодня: <span>'+fmtNum(r.w)+' кг</span> × '+rng+' ↑ прибавка';
   else goal='Сегодня: <span>'+fmtNum(r.w)+' кг</span>, добей до '+R.hi+' во всех подходах';
@@ -74,12 +75,12 @@ function loggerHtml(gid,en,showName,groupExIds){
   var rows=en.sets.map(function(s,i){
     var a='data-g="'+gid+'" data-e="'+en.exId+'" data-i="'+i+'"';
     var logged=s.r>0;
-    if(mode!=="w")return '<div class="set nw'+(logged?' logged':'')+'"><span class="n">'+(i+1)+'</span>'+
+    if(mode!=="w"&&mode!=="assist")return '<div class="set nw'+(logged?' logged':'')+'"><span class="n">'+(i+1)+'</span>'+
       '<div class="fld"><input id="r-'+en.exId+'-'+i+'" inputmode="numeric" enterkeyhint="done" autocomplete="off" '+a+' data-f="r" value="'+(s.r||"")+'" placeholder="'+(mode==="time"?"секунды":(R.lo===R.hi?R.lo:R.lo+'–'+R.hi))+'" aria-label="'+(mode==="time"?"Секунды":"Повторы")+'"><small>'+(mode==="time"?"сек":"раз")+'</small></div>'+
       '<button class="del" data-act="delset" '+a+' aria-label="Убрать подход">×</button></div>';
-    return '<div class="set'+(logged?' logged':'')+'"><span class="n">'+(i+1)+'</span>'+
+    return '<div class="set'+(logged?' logged':'')+(mode==="assist"?' assist':'')+'"><span class="n">'+(i+1)+'</span>'+
       '<div class="wfld"><button class="pm" data-act="wminus" '+a+' aria-label="Меньше вес">−</button>'+
-      '<div class="fld"><input id="w-'+en.exId+'-'+i+'" inputmode="decimal" autocomplete="off" '+a+' data-f="w" value="'+fmtNum(s.w)+'" placeholder="0" aria-label="Вес, кг"></div>'+
+      '<div class="fld"><input id="w-'+en.exId+'-'+i+'" inputmode="decimal" autocomplete="off" '+a+' data-f="w" value="'+fmtNum(s.w)+'" placeholder="'+(mode==="assist"?'помощь':'0')+'" aria-label="'+(mode==="assist"?'Противовес, кг':'Вес, кг')+'"></div>'+
       '<button class="pm" data-act="wplus" '+a+' aria-label="Больше вес">+</button></div>'+
       '<span class="x">×</span>'+
       '<div class="fld"><input id="r-'+en.exId+'-'+i+'" inputmode="numeric" enterkeyhint="done" autocomplete="off" '+a+' data-f="r" value="'+(s.r||"")+'" placeholder="'+(R.lo===R.hi?R.lo:R.lo+'–'+R.hi)+'" aria-label="Повторы"></div>'+
@@ -101,10 +102,30 @@ function loggerHtml(gid,en,showName,groupExIds){
   var head='<div class="lhead">'+((showName||foreign)?'<h3>'+esc(exName(en.exId))+'</h3>':'<span class="sp"></span>')+modeChip(en.exId)+kindChip(en.exId)+
     (f&&f.e.backRisk?'<span class="risk" title="Нагрузка на поясницу">⚠️</span>':'')+
     '<span class="ltools"><button class="tool" data-act="swap" data-g="'+gid+'" data-e="'+en.exId+'" title="Тренажёр занят">⇄ Занято</button>'+
-    (partner?'':'<button class="tool'+(state.ssPick===entryKey(en)?' on':'')+'" data-act="sspick" data-g="'+gid+'" data-e="'+en.exId+'" title="Суперсет">🔗</button>')+'</span></div>';
+    (partner?'':'<button class="tool'+(state.ssPick===entryKey(en)?' on':'')+'" data-act="sspick" data-g="'+gid+'" data-e="'+en.exId+'" title="Суперсет">🔗</button>')+
+    '<button class="tool" data-act="collapse" data-g="'+gid+'" data-e="'+en.exId+'" aria-label="Свернуть подходы" title="Свернуть">▴</button></span></div>';
   head+=modePicker(en.exId);
   return '<div class="log'+(partner?' inss':'')+'" data-entry="'+esc(entryKey(en))+'">'+head+swapHtml+ssHtml+noteHtml+recHtml(en.exId)+
     '<div class="sets">'+rows+'</div><button class="addset" data-act="addset" data-g="'+gid+'" data-e="'+en.exId+'">+ подход</button></div>';
+}
+function collapsedHtml(gid,en){
+  var txt=entryDone(en)?setsText(en):en.sets.length+" "+plural(en.sets.length,"подход","подхода","подходов")+" · ещё не начато";
+  var all=en.sets.length&&en.sets.every(function(s){return s.r>0;});
+  return '<button class="logc'+(all?' full':'')+'" data-act="expand" data-g="'+gid+'" data-e="'+en.exId+'" aria-label="Развернуть подходы"><span class="lcn">'+(all?'✓ ':'')+esc(exName(en.exId))+'</span><span class="lcs">'+esc(txt)+'</span><span class="lcv">▾</span></button>';
+}
+function reorderHtml(slots){
+  var h='<div class="card reord"><div class="hrow"><b>Порядок упражнений</b><button class="btn primary" data-act="orddone">Готово</button></div><p class="hint left">Стрелками меняй местами группы и упражнения в сегодняшней тренировке.</p>';
+  slots.forEach(function(s,i){
+    var g=group(s.gid);var ents=state.draft.entries.filter(function(en){return en.gid===s.gid;});
+    h+='<div class="orow"><span class="oname">'+esc(g.name)+(ents.length===1?'<small>'+esc(exName(ents[0].exId))+'</small>':'')+'</span>'+
+      '<span class="mv"><button data-act="ordmv" data-g="'+s.gid+'" data-d="-1" aria-label="Выше"'+(i===0?' disabled':'')+'>↑</button><button data-act="ordmv" data-g="'+s.gid+'" data-d="1" aria-label="Ниже"'+(i===slots.length-1?' disabled':'')+'>↓</button></span></div>';
+    if(ents.length>1)ents.forEach(function(en,k){
+      h+='<div class="orow sub"><span class="oname">'+esc(exName(en.exId))+'</span><span class="mv"><button data-act="entmv" data-g="'+s.gid+'" data-e="'+en.exId+'" data-d="-1" aria-label="Выше"'+(k===0?' disabled':'')+'>↑</button><button data-act="entmv" data-g="'+s.gid+'" data-e="'+en.exId+'" data-d="1" aria-label="Ниже"'+(k===ents.length-1?' disabled':'')+'>↓</button></span></div>';
+    });
+  });
+  var p=program(state.draft.programId);
+  if(p)h+='<button class="btn" data-act="ordsave">Сохранить этот порядок в программе «'+esc(p.name)+'»</button>';
+  return h+'</div>';
 }
 function swapOptions(en){
   var used={};state.draft.entries.forEach(function(x){used[x.exId]=true;});
@@ -162,6 +183,11 @@ function renderWorkout(){
   if(canFill)h+='<button class="btn fill" data-act="fill">★ Заполнить по программе</button>';
   if(state.ssPick)h+='<div class="banner ss">Выбери второе упражнение для суперсета и нажми «Связать». <button class="linkbtn" data-act="sscancel">отмена</button></div>';
   if(!slots.length)h+='<div class="empty">В этой тренировке пока нет групп мышц.<br>Добавь их в «Настройки» → «Мои тренировки».</div>';
+  if(slots.length){
+    var anyEnt=state.draft.entries.length>0;var allC=anyEnt&&state.draft.entries.every(function(en){return en.collapsed;});
+    h+='<div class="wtools"><button class="tool'+(state.reorder?' on':'')+'" data-act="reorder">⇅ Порядок</button>'+(anyEnt?'<button class="tool" data-act="'+(allC?'expandall':'collapseall')+'">'+(allC?'▾ Развернуть всё':'▴ Свернуть всё')+'</button>':'')+'</div>';
+  }
+  if(state.reorder){view.innerHTML=h+reorderHtml(slots);return;}
   slots.forEach(function(s,si){
     var g=group(s.gid);
     var entries=state.draft.entries.filter(function(en){return en.gid===s.gid;});
@@ -172,9 +198,10 @@ function renderWorkout(){
       return '<button class="chip'+(on?' on':'')+(star?' pref':'')+'" data-act="pick" data-g="'+g.id+'" data-e="'+id+'" data-c="'+s.count+'" aria-pressed="'+on+'">'+(star?'★ ':'')+esc(exName(id))+'</button>';
     }).join("");
     var tag=groupDone(s.gid)?'<span class="check">✓</span>':(s.count>1?'<span class="tag">до '+s.count+' упр.</span>':(s.extra?'<span class="tag">вне плана</span>':''));
-    h+='<section class="group'+(groupDone(s.gid)?' done':'')+'" data-group="'+g.id+'"><div class="ghead">'+plate(si)+'<h2>'+esc(g.name)+'</h2>'+tag+'</div>'+
-      '<div class="chips">'+(chips||'<span class="hint">Нет упражнений — добавь в «Настройках»</span>')+'</div>'+
-      entries.map(function(en){return loggerHtml(g.id,en,s.count>1,exIds);}).join("")+'</section>';
+    var compact=entries.length&&entries.every(function(en){return en.collapsed;});
+    h+='<section class="group'+(groupDone(s.gid)?' done':'')+(compact?' compact':'')+'" data-group="'+g.id+'"><div class="ghead">'+plate(si)+'<h2>'+esc(g.name)+'</h2>'+tag+'</div>'+
+      (compact?'':'<div class="chips">'+chips+'<button class="chip more" data-act="catalog" data-g="'+g.id+'" data-c="'+s.count+'">+ ещё упражнения</button></div>')+
+      entries.map(function(en){return en.collapsed?collapsedHtml(g.id,en):loggerHtml(g.id,en,s.count>1,exIds);}).join("")+'</section>';
   });
   if(state.draft.entries.some(entryDone)&&!state.draft.finishedAt&&state.date===todayIso())h+='<button class="btn primary wide" data-act="finish">Завершить тренировку</button>';
   h+='<p class="hint">Вес подставляется по прошлой тренировке — впиши повторы, и запустится отдых.</p>';
@@ -256,7 +283,7 @@ function chartSvg(pts,useReps,goalW){
   return s+'</svg>';
 }
 function goalCardHtml(exId,hist,useReps){
-  if(useReps)return "";
+  if(useReps||exMode(exId)==="assist")return "";
   var g=state.config.goals[exId];var cur=hist[hist.length-1].top;
   if(!g||state.editGoal===exId){
     return '<div class="card goal"><b>🎯 Цель</b><form class="goalform" data-form="goal" data-e="'+exId+'"><label>Вес, кг<input id="goalW" inputmode="decimal" value="'+(g?fmtNum(g.w):fmtNum(roundW(cur*1.2)))+'"></label><label>К дате (необязательно)<input id="goalD" type="date" value="'+(g&&g.by?g.by:'')+'"></label><button class="btn primary" type="submit">Сохранить</button></form>'+(g?'<button class="linkbtn" data-act="goaldel" data-e="'+exId+'">удалить цель</button>':'')+'</div>';
@@ -288,24 +315,26 @@ function renderProgress(){
     return o?'<optgroup label="'+esc(g.name)+'">'+o+'</optgroup>':'';
   }).join("");
   var hist=exHistory(state.progEx);
-  var exm=exMode(state.progEx);
-  var useReps=exm!=="w"||hist.every(function(p){return p.top<=0;});
-  var best=hist.reduce(function(b,p){var v=useReps?p.reps:p.top,bv=useReps?b.reps:b.top;return v>bv||(v===bv&&p.reps>b.reps)?p:b;},hist[0]);
+  var exm=exMode(state.progEx);var inv=exm==="assist";
+  var useReps=(exm!=="w"&&!inv)||(exm==="w"&&hist.every(function(p){return p.top<=0;}));
+  var best=hist.reduce(function(b,p){var v=useReps?p.reps:p.top,bv=useReps?b.reps:b.top;if(inv)return v<bv||(v===bv&&p.reps>b.reps)?p:b;return v>bv||(v===bv&&p.reps>b.reps)?p:b;},hist[0]);
   var first=hist[0],last=hist[hist.length-1];
   var diff=useReps?last.reps-first.reps:Math.round((last.top-first.top)*100)/100;
   var unit=exm==="time"?" сек":useReps?" раз":" кг";
+  if(inv)diff=Math.round((first.top-last.top)*100)/100;
   var g=state.config.goals[state.progEx];
   h+='<div class="sec-title">Упражнение</div><select class="sel" id="progSel" aria-label="Упражнение">'+opts+'</select>'+
     '<div class="stats"><div class="stat"><small>Тренировок</small><b>'+hist.length+'</b></div>'+
-    '<div class="stat"><small>Рекорд</small><b>'+(useReps?best.reps+unit:fmtNum(best.top)+'×'+best.reps)+'</b></div>'+
-    '<div class="stat"><small>Прирост</small><b>'+(diff>0?'+':'')+fmtNum(diff)+unit+'</b></div></div>'+
+    '<div class="stat"><small>'+(inv?'Рекорд, помощь':'Рекорд')+'</small><b>'+(useReps?best.reps+unit:fmtNum(best.top)+'×'+best.reps)+'</b></div>'+
+    '<div class="stat"><small>'+(inv?'Меньше помощи':'Прирост')+'</small><b>'+(diff>0?'+':'')+fmtNum(diff)+unit+'</b></div></div>'+
     '<div class="chart">'+chartSvg(hist,useReps,g&&g.w)+'</div>'+goalCardHtml(state.progEx,hist,useReps)+
     '<details class="card plainlist"><summary>Все тренировки с этим упражнением ('+hist.length+')</summary><div class="lines">'+
     hist.slice().reverse().map(function(p){return '<div><span>'+fmtDate(p.date,true)+'</span><span>'+esc(setsText(p.entry))+'</span></div>';}).join("")+'</div></details>';
   var rows=comparison(state.cmpMonths);
   h+='<div class="sec-title">Было → стало</div><div class="card"><div class="seg">'+[[1,"Месяц"],[3,"3 месяца"],[6,"Полгода"]].map(function(o){return '<button class="'+(state.cmpMonths===o[0]?'on':'')+'" data-act="cmp" data-m="'+o[0]+'">'+o[1]+'</button>';}).join("")+'</div>'+
     (rows.length?'<div class="cmp">'+rows.map(function(r){var up=r.diff>0,dn=r.diff<0;
-      return '<div class="crow"><span class="cname">'+esc(exName(r.exId))+(r.since?'<small>с '+fmtDate(r.fromDate)+'</small>':'')+'</span><span class="cval">'+fmtNum(r.from)+' → <b>'+fmtNum(r.to)+'</b> '+r.unit+'</span><span class="cdiff '+(up?'up':dn?'down':'')+'">'+(up?'+':'')+fmtNum(r.diff)+(r.pct?' ('+(up?'+':'')+r.pct+'%)':'')+'</span></div>';}).join("")+'</div>':'<p class="hint left">Сравнение появится, когда по упражнению будет хотя бы две тренировки.</p>')+'</div>';
+      if(r.inv){up=r.diff<0;dn=r.diff>0;}
+      return '<div class="crow"><span class="cname">'+esc(exName(r.exId))+(r.since?'<small>с '+fmtDate(r.fromDate)+'</small>':'')+'</span><span class="cval">'+fmtNum(r.from)+' → <b>'+fmtNum(r.to)+'</b> '+r.unit+'</span><span class="cdiff '+(up?'up':dn?'down':'')+'">'+(r.diff>0?'+':'')+fmtNum(r.diff)+(r.pct?' ('+(r.pct>0?'+':'')+r.pct+'%)':'')+'</span></div>';}).join("")+'</div>':'<p class="hint left">Сравнение появится, когда по упражнению будет хотя бы две тренировки.</p>')+'</div>';
   h+=achHtml();
   view.innerHTML=h;
 }

@@ -22,8 +22,8 @@ head='''<!doctype html>
 standalone=head+FONTS+'\n<style>'+css+'</style>\n</head>\n<body>\n'+body+script+'</body>\n</html>\n'
 open('/home/claude/dnevnik-zala/index.html','w').write(standalone)
 open('/home/claude/dnevnik-zala-android/www/index.html','w').write(standalone)
-art='<title>Дневник зала</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n'+FONTS+'\n<style>'+css+'</style>\n'+body+script.replace('var IS_ARTIFACT = false;','var IS_ARTIFACT = true;')
+art='<!DOCTYPE html>\n<html lang="ru">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n<title>Дневник зала</title>\n'+FONTS+'\n<style>'+css+'</style>\n</head>\n<body>\n'+body+script.replace('var IS_ARTIFACT = false;','var IS_ARTIFACT = true;')+'</body>\n</html>\n'
 assert 'IS_ARTIFACT = true' in art
-open('/tmp/claude-0/-home-claude/e8a8e9bd-27a9-52db-99d5-3e269529e02d/scratchpad/trenlog.html','w').write(art)
-open('/tmp/claude-0/-home-claude/e8a8e9bd-27a9-52db-99d5-3e269529e02d/scratchpad/app.js','w').write(js)
+open('/home/claude/out/index.html','w').write(art)
+open('/home/claude/out/app.js','w').write(js)
 print('ok',len(standalone))

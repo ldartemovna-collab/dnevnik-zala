@@ -45,7 +45,8 @@ function renderSettings(){
       '<div class="gbody"><div class="hrow"><input class="nameinp" id="gn-'+g.id+'" data-ren="g" data-id="'+g.id+'" value="'+esc(g.name)+'" aria-label="Название группы">'+confirmBtns("g",g.id,"Удалить группу")+'</div>'+
       '<label class="mline">На карте мышц<select class="sel small" id="gm-'+g.id+'" data-gmuscle="'+g.id+'">'+mopts+'</select></label>'+
       '<div>'+(rows||'<div class="hint">Пока пусто</div>')+'</div>'+
-      '<form class="addrow" data-form="ex" data-g="'+g.id+'"><input id="add-'+g.id+'" placeholder="Новое упражнение" aria-label="Новое упражнение"><button class="btn primary" type="submit">Добавить</button></form></div></details>';
+      '<button class="btn" data-act="catalog" data-g="'+g.id+'" data-ctx="settings">📖 Добавить из каталога</button>'+
+      '<form class="addrow" data-form="ex" data-g="'+g.id+'"><input id="add-'+g.id+'" placeholder="Или впиши своё упражнение" aria-label="Новое упражнение"><button class="btn primary" type="submit">Добавить</button></form></div></details>';
   });
   h+='<form class="addrow" data-form="group"><input id="newGroup" placeholder="Новая группа мышц" aria-label="Новая группа мышц"><button class="btn primary" type="submit">Создать</button></form>';
 
@@ -74,7 +75,7 @@ function renderSettings(){
 }
 
 /* ---------- окна ---------- */
-function openModal(m){state.modal=m;renderModal();}
+function openModal(m){state.modal=m;renderModal();if(m.type==="catalog")applyCatFilter();}
 function closeModal(){state.modal=null;renderModal();}
 function renderModal(){
   var el=document.getElementById("modal");var m=state.modal;
@@ -96,6 +97,22 @@ function renderModal(){
       '<div class="seg"><button class="'+(state.cardFormat!=="story"?'on':'')+'" data-act="cardfmt" data-f="post">Пост 4:5</button><button class="'+(state.cardFormat==="story"?'on':'')+'" data-act="cardfmt" data-f="story">Сторис 9:16</button></div>'+
       '<div class="cardprev'+(state.cardFormat==="story"?' story':'')+'">'+(m.url?'<img src="'+m.url+'" alt="Карточка тренировки">':'<div class="hint">Рисую…</div>')+'</div>'+
       '<div class="btns"><button class="btn primary" data-act="cardshare"'+(m.url?'':' disabled')+'>'+(IS_ARTIFACT?'Скачать картинку':'Поделиться')+'</button><button class="btn" data-act="cardre">🎲 Другой вариант</button></div><span class="msg" id="cardMsg"></span>';
+  }else if(m.type==="catalog"){
+    var cg=group(m.gid);var gm=cg&&cg.muscle;
+    var items=CATALOG.filter(function(c){return state.catAll||!gm||c.muscle===gm;});
+    var cats={};items.forEach(function(c){(cats[c.cat]=cats[c.cat]||[]).push(c);});
+    inner='<div class="mhead"><h2>Каталог упражнений</h2><button class="x" data-act="mclose" aria-label="Закрыть">×</button></div>'+
+      '<p class="msub">Добавить в группу «'+esc(cg?cg.name:"")+'». Всего в каталоге '+CATALOG.length+' упражнений.</p>'+
+      '<input class="catsearch" id="catSearch" type="search" placeholder="Поиск: жим, присед, планка…" autocomplete="off" value="'+esc(state.catQuery||"")+'">'+
+      '<div class="chips"><button class="chip'+(state.catAll?' on':'')+'" data-act="catall">Все группы мышц</button><button class="chip'+(state.catHome?' on':'')+'" data-act="cathome">🏠 Можно дома</button></div>'+
+      '<div class="catlist" id="catList">'+Object.keys(cats).map(function(ci){
+        return '<div class="catsec"><div class="catttl">'+esc(CATALOG_GROUPS[ci].name)+'</div>'+cats[ci].map(function(c){
+          var has=cg&&groupHasName(cg,c.name);
+          var badges=(c.mode!=="w"?'<span class="cb">'+MODES[c.mode].short+'</span>':'')+(c.home?'<span class="cb">🏠</span>':'')+(c.backRisk?'<span class="cb" title="Нагрузка на поясницу">⚠️</span>':'');
+          return '<div class="citem" data-n="'+esc(normName(c.name))+'" data-home="'+(c.home?1:0)+'"><span class="cname2">'+esc(c.name)+badges+'</span>'+
+            (has?'<span class="chas">✓ есть</span>':'<button class="btn small" data-act="catadd" data-c="'+c.id+'">Добавить</button>')+'</div>';
+        }).join("")+'</div>';
+      }).join("")+'</div><p class="hint" id="catEmpty" hidden>Ничего не нашлось. Можно вписать своё упражнение в «Настройках».</p>';
   }else if(m.type==="library"){
     var lt=state.libTab;
     inner='<div class="mhead"><h2>Готовые программы</h2><button class="x" data-act="mclose" aria-label="Закрыть">×</button></div>'+
@@ -113,6 +130,13 @@ function renderModal(){
   }
   el.innerHTML='<div class="mback" data-act="mclose"></div><div class="mbox" role="dialog" aria-modal="true">'+inner+'</div>';
 }
+function applyCatFilter(){
+  var q=normName(state.catQuery||"");var list=document.getElementById("catList");if(!list)return;var shown=0;
+  list.querySelectorAll(".citem").forEach(function(it){var ok=(!q||it.dataset.n.indexOf(q)>=0)&&(!state.catHome||it.dataset.home==="1");it.hidden=!ok;if(ok)shown++;});
+  list.querySelectorAll(".catsec").forEach(function(sec){sec.hidden=!sec.querySelector(".citem:not([hidden])");});
+  var em=document.getElementById("catEmpty");if(em)em.hidden=shown>0;
+}
+document.getElementById("modal").addEventListener("input",function(e){if(e.target.id==="catSearch"){state.catQuery=e.target.value;applyCatFilter();}});
 function openCard(date,keepSeed){
   var w=date===state.date?state.draft:state.workouts[date];if(!w)return;
   if(!keepSeed)state.cardSeed=Math.floor(Math.random()*1e9);

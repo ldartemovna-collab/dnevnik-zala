@@ -8,8 +8,8 @@ var KINDS = {
   core:{name:"Пресс / икры",short:"Лёгк.",rest:45}
 };
 var KIND_ORDER = ["heavy","mid","iso","core"];
-var MODES = {w:{name:"С весом",short:"кг"},bw:{name:"Без веса",short:"без веса"},time:{name:"На время",short:"сек"}};
-var MODE_ORDER = ["w","bw","time"];
+var MODES = {w:{name:"С весом",short:"кг"},bw:{name:"Без веса",short:"без веса"},time:{name:"На время",short:"сек"},assist:{name:"С помощью",short:"помощь"}};
+var MODE_ORDER = ["w","bw","time","assist"];
 var MUSCLES = {quads:"Квадрицепс",glutes:"Ягодицы",hams:"Задняя поверхность бедра",hips:"Внешняя и внутренняя часть бедра",back:"Спина",chest:"Грудь",shoulders:"Плечи",biceps:"Бицепс",triceps:"Трицепс",calves:"Икры",abs:"Пресс"};
 var ACCENTS = [["blue","Синий"],["pink","Розовый"],["violet","Фиолетовый"],["green","Зелёный"],["orange","Оранжевый"]];
 
@@ -21,7 +21,7 @@ var DEFAULT_GROUPS = [
   G("g","Ягодицы","glutes",[["g1","Ягодичный мост","mid"],["g2","Гиперэкстензия","mid",null,0,"bw"],["g3","Отведение ноги назад","iso"],["g4","Хип-траст со штангой","heavy"],["g5","Мост на одной ноге","iso",null,0,"bw"],["g6","Ягодичный мост лёжа на полу","mid",null,0,"bw"],["g7","Отведение ноги на четвереньках","iso",null,0,"bw"]]),
   G("h","Задняя поверхность бедра","hams",[["h1","Сгибание ног","iso"],["h2","Румынская тяга","heavy",null,1],["h3","Становая тяга","heavy",null,1],["h4","Сгибание ног с пятками на полотенце","iso",null,0,"bw"]]),
   G("l","Ноги, дополнительно","hips",[["l1","Отведение бёдер","iso"],["l2","Сведение бёдер","iso"],["l3","Отведение ноги лёжа на боку","iso",null,0,"bw"],["l4","Шаги в сторону с резинкой","iso",null,0,"bw"]]),
-  G("b","Спина","back",[["b1","Тяга верхнего блока","mid"],["b2","Рычажная тяга","mid"],["b3","Тяга гантели одной рукой","mid"],["b4","Тяга штанги в наклоне","heavy",null,1],["b5","Тяга горизонтального блока","mid"],["b6","Подтягивания в гравитроне","mid"],["b7","Пуловер на верхнем блоке","iso"],["b8","Супермен (лёжа на животе)","core",null,0,"bw"],["b9","Тяга резинки к поясу","mid"],["b10","Тяга гантелей в наклоне с упором","mid"]]),
+  G("b","Спина","back",[["b1","Тяга верхнего блока","mid"],["b2","Рычажная тяга","mid"],["b3","Тяга гантели одной рукой","mid"],["b4","Тяга штанги в наклоне","heavy",null,1],["b5","Тяга горизонтального блока","mid"],["b6","Подтягивания в гравитроне","mid",null,0,"assist"],["b7","Пуловер на верхнем блоке","iso"],["b8","Супермен (лёжа на животе)","core",null,0,"bw"],["b9","Тяга резинки к поясу","mid"],["b10","Тяга гантелей в наклоне с упором","mid"]]),
   G("c","Грудь","chest",[["c1","Жим гантелей","mid"],["c2","Бабочка","iso"],["c3","Разводка гантелей","iso"],["c4","Отжимания","mid",null,0,"bw"],["c5","Жим гантелей на наклонной","mid"],["c6","Жим штанги лёжа","heavy"],["c7","Жим в тренажёре сидя","mid"],["c8","Отжимания с колен","mid",null,0,"bw"],["c9","Жим гантелей лёжа на полу","mid"]]),
   G("s","Плечи","shoulders",[["s1","Армейский жим","heavy",null,1],["s2","Жим гантелей сидя","mid"],["s3","Махи в стороны","iso"],["s4","Отведение на блоке","iso"],["s5","Обратная бабочка","iso"],["s6","Тяга каната к лицу","iso"],["s7","Отжимания уголком (пайк)","mid",null,0,"bw"],["s8","Тяга резинки к лицу","iso"]]),
   G("m","Мини-блок","triceps",[["m1","Трицепс","iso","triceps"],["m2","Икры","core","calves"],["m3","Пресс","core","abs",0,"bw"]]),
@@ -171,12 +171,12 @@ function findEx(id){var gs=groups();for(var i=0;i<gs.length;i++){for(var j=0;j<g
 function exName(id){var f=findEx(id);return f?f.e.name:"Упражнение удалено";}
 function exKind(id){var f=findEx(id);return f&&KINDS[f.e.kind]?f.e.kind:"mid";}
 function exMode(id){var f=findEx(id);return f&&MODES[f.e.mode]?f.e.mode:"w";}
-function fmtSet(exId,w,r){if(exMode(exId)==="time")return r+" сек";return (w?fmtNum(w)+" кг × ":"")+r;}
+function fmtSet(exId,w,r){var m=exMode(exId);if(m==="time")return r+" сек";if(m==="assist")return "помощь "+fmtNum(w||0)+" кг × "+r;return (w?fmtNum(w)+" кг × ":"")+r;}
 /* Упражнения без веса, по которым раньше записывали вес, оставляем «с весом» */
 function fixModesByHistory(){
   if(state.config.modesChecked)return;
   var weighted={};sortedDates().forEach(function(d){state.workouts[d].entries.forEach(function(en){if(workSets(en).some(function(s){return s.w>0;}))weighted[en.exId]=1;});});
-  groups().forEach(function(g){g.ex.forEach(function(e){if(e.mode&&e.mode!=="w"&&weighted[e.id])e.mode="w";});});
+  groups().forEach(function(g){g.ex.forEach(function(e){if(e.mode&&e.mode!=="w"&&e.mode!=="assist"&&weighted[e.id])e.mode="w";});});
   state.config.modesChecked=true;state.cfgDirty=true;
 }
 function exMuscle(id){var f=findEx(id);if(!f)return null;return f.e.muscle||f.g.muscle||null;}
@@ -185,8 +185,10 @@ function sortedDates(){return Object.keys(state.workouts).sort();}
 function doneEntries(w){return (w.entries||[]).filter(function(en){return workSets(en).length>0;});}
 function isWorkoutDone(w){return doneEntries(w).length>0;}
 function programName(id){var p=program(id);return p?p.name:"";}
-function entryTop(en){var ws=workSets(en);if(!ws.length)return null;var top=Math.max.apply(null,ws.map(function(s){return s.w||0;}));var reps=Math.max.apply(null,ws.filter(function(s){return (s.w||0)===top;}).map(function(s){return s.r;}));return {w:top,r:reps};}
+function entryTop(en){var ws=workSets(en);if(!ws.length)return null;var as=exMode(en.exId)==="assist";var ws2=ws.map(function(s){return s.w||0;});var top=as?Math.min.apply(null,ws2):Math.max.apply(null,ws2);var reps=Math.max.apply(null,ws.filter(function(s){return (s.w||0)===top;}).map(function(s){return s.r;}));return {w:top,r:reps};}
 function better(a,b){if(!b)return true;if(!a)return false;return a.w>b.w||(a.w===b.w&&a.r>b.r);}
+/* Для упражнений «с помощью» (гравитрон) лучше — меньше противовес */
+function betterEx(exId,a,b){if(!b)return true;if(!a)return false;if(exMode(exId)==="assist")return a.w<b.w||(a.w===b.w&&a.r>b.r);return better(a,b);}
 
 function lastSession(exId,before){
   var ds=sortedDates();
@@ -199,19 +201,19 @@ function lastSession(exId,before){
 }
 function bestBefore(exId,before){
   var best=null;
-  sortedDates().forEach(function(d){if(d>=before)return;state.workouts[d].entries.forEach(function(en){if(en.exId!==exId)return;workSets(en).forEach(function(s){var c={w:s.w||0,r:s.r};if(better(c,best))best=c;});});});
+  sortedDates().forEach(function(d){if(d>=before)return;state.workouts[d].entries.forEach(function(en){if(en.exId!==exId)return;workSets(en).forEach(function(s){var c={w:s.w||0,r:s.r};if(betterEx(exId,c,best))best=c;});});});
   return best;
 }
 function workoutRecords(w){
   var out=[];
   doneEntries(w).forEach(function(en){
     var prev=bestBefore(en.exId,w.date);if(!prev)return;
-    var top=null;workSets(en).forEach(function(s){var c={w:s.w||0,r:s.r};if(better(c,top))top=c;});
-    if(better(top,prev)&&(top.w!==prev.w||top.r!==prev.r))out.push({exId:en.exId,w:top.w,r:top.r,prev:prev});
+    var top=null;workSets(en).forEach(function(s){var c={w:s.w||0,r:s.r};if(betterEx(en.exId,c,top))top=c;});
+    if(betterEx(en.exId,top,prev)&&(top.w!==prev.w||top.r!==prev.r))out.push({exId:en.exId,w:top.w,r:top.r,prev:prev});
   });
   return out;
 }
-function tonnage(w){var t=0;(w.entries||[]).forEach(function(en){workSets(en).forEach(function(s){t+=(s.w||0)*s.r;});});return t;}
+function tonnage(w){var t=0;(w.entries||[]).forEach(function(en){if(exMode(en.exId)==="assist")return;workSets(en).forEach(function(s){t+=(s.w||0)*s.r;});});return t;}
 function setsCount(w){var n=0;(w.entries||[]).forEach(function(en){n+=workSets(en).length;});return n;}
 function workoutDuration(w){
   if(!w.startedAt)return null;
@@ -227,8 +229,15 @@ function recommend(exId,date){
   var ws=workSets(last.entry);
   var mode=exMode(exId);
   if(mode==="time"){var best=Math.max.apply(null,ws.map(function(s){return s.r;}));return {type:"up",time:true,target:best+5,last:last,R:R};}
-  var top=mode==="bw"?0:Math.max.apply(null,ws.map(function(s){return s.w||0;}));
   var allTop=ws.every(function(s){return s.r>=R.hi;});
+  if(mode==="assist"){
+    var help=Math.min.apply(null,ws.map(function(s){return s.w||0;}));var ra;
+    if(allTop)ra={type:"up",assist:true,w:Math.max(0,Math.round((help-stepFor(Math.max(help-0.01,0)))*100)/100),last:last};
+    else ra={type:"hold",assist:true,w:help,last:last};
+    if(R.load<1){ra.type="deload";ra.w=roundW(help*(2-R.load));}
+    ra.R=R;return ra;
+  }
+  var top=mode==="bw"?0:Math.max.apply(null,ws.map(function(s){return s.w||0;}));
   var res;
   if(top<=0)res={type:allTop?"up":"hold",w:0,bw:true,last:last};
   else if(allTop)res={type:"up",w:Math.round((top+stepFor(top))*100)/100,last:last};
@@ -242,13 +251,15 @@ function setsText(entry){
   var mode=exMode(entry.exId);
   if(mode==="time")return ws.map(function(s){return s.r;}).join(", ")+" сек";
   if(mode==="bw")return ws.map(function(s){return s.r;}).join(", ")+" раз";
+  if(mode==="assist"){var same=ws.every(function(s){return s.w===ws[0].w;});return same?"помощь "+fmtNum(ws[0].w||0)+" кг × "+ws.map(function(s){return s.r;}).join(", "):"помощь "+ws.map(function(s){return fmtNum(s.w||0)+"×"+s.r;}).join(", ");}
   var sameW=ws.every(function(s){return s.w===ws[0].w;});
   if(sameW)return (ws[0].w?fmtNum(ws[0].w)+" кг × ":"")+ws.map(function(s){return s.r;}).join(", ");
   return ws.map(function(s){return (s.w?fmtNum(s.w)+"×":"")+s.r;}).join(", ");
 }
 function newEntry(gid,exId){
   var rec=recommend(exId,state.date);
-  var w=(exMode(exId)==="w"&&rec.w!==undefined&&rec.w>0)?rec.w:null;
+  var md=exMode(exId);
+  var w=((md==="w"&&rec.w>0)||(md==="assist"&&rec.w!==undefined))?rec.w:null;
   var sets=[];for(var i=0;i<rec.R.sets;i++)sets.push({w:w,r:null});
   return {gid:gid,exId:exId,sets:sets};
 }
@@ -261,6 +272,8 @@ function currentSlots(){
     if(!slots.some(function(s){return s.gid===en.gid;})&&group(en.gid))slots.push({gid:en.gid,count:1,extra:true});
   });
   slots.forEach(function(s){var n=state.draft.entries.filter(function(en){return en.gid===s.gid;}).length;if(n>s.count)s.count=n;});
+  var ord=state.draft.order;
+  if(ord&&ord.length){slots.forEach(function(s,i){s._i=i;});slots.sort(function(a,b){var ia=ord.indexOf(a.gid),ib=ord.indexOf(b.gid);if(ia<0)ia=999+a._i;if(ib<0)ib=999+b._i;return ia-ib;});}
   return slots;
 }
 /* Следующая тренировка по очереди: после последней сделанной программы */
